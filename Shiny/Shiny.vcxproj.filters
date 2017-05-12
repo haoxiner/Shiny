@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Util">
+      <UniqueIdentifier>{9babf479-2d37-4dac-aec2-634276f3fda3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{34bfa85c-2947-4669-a4a3-31a7ea11c04f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shiny">
+      <UniqueIdentifier>{91541371-9658-471b-b0d5-658d8ddaf9e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPUData">
+      <UniqueIdentifier>{de8ccaf5-e28f-4c05-bf81-32a30cdf1603}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MathUtil.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Display.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="PerformanceTimer.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderProgram.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticShader.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderingSystem.h">
+      <Filter>Shiny</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Shiny.cpp">
+      <Filter>Shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="Display.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="PerformanceTimer.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderProgram.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticShader.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>GPUData</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderingSystem.cpp">
+      <Filter>Shiny</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

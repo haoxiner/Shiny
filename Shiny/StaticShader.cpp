@@ -39,7 +39,7 @@ void Shiny::StaticShader::GetAllUniformLocations() {
     projectionMatrixLocation_ = GetUniformLocation("projectionMatrix");
 }
 
-void Shiny::StaticShader::LoadModelMatrix(const Matrix4x4f& value) {
+void Shiny::StaticShader::LoadModelMatrix(const Matrix4x4& value) {
     LoadMatrix(modelMatrixLocation_, value);
 }
 
@@ -47,6 +47,6 @@ void Shiny::StaticShader::LoadModelMatrix(const Matrix4x4f& value) {
 //    LoadMatrix(viewMatrixLocation_, camera.GetViewMatrix());
 //}
 
-void Shiny::StaticShader::LoadProjectionMatrix(const Matrix4x4f& value) {
+void Shiny::StaticShader::LoadProjectionMatrix(const Matrix4x4& value) {
     LoadMatrix(projectionMatrixLocation_, value);
 }

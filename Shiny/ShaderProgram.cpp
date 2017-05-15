@@ -72,11 +72,11 @@ void Shiny::ShaderProgram::LoadFloat(GLint location, float value) {
     glUniform1f(location, value);
 }
 
-void Shiny::ShaderProgram::LoadVector(GLint location, const Vector3f& value) {
+void Shiny::ShaderProgram::LoadVector(GLint location, const Float3& value) {
     glUniform3fv(location, 1, &value[0]);
 }
 
-void Shiny::ShaderProgram::LoadMatrix(GLint location, const Matrix4x4f& value) {
+void Shiny::ShaderProgram::LoadMatrix(GLint location, const Matrix4x4& value) {
     glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
 }
 

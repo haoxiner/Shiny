@@ -5,10 +5,10 @@ namespace Shiny
 {
 class Camera {
 public:
-    const Vector3f& GetPosition() const;
-    const Matrix4x4f& GetViewMatrix() const;
+    const Float3& GetPosition() const;
+    const Matrix4x4& GetViewMatrix() const;
 protected:
-    Vector3f position_;
+    Float3 position_;
     float pitch_ = 0.0f;
     float yaw_ = 0.0f;
     float roll_ = 0.0f;

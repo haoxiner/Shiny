@@ -7,9 +7,9 @@ public:
     bool Startup();
     virtual void BindAttributes();
     virtual void GetAllUniformLocations();
-    void LoadModelMatrix(const Matrix4x4f& value);
+    void LoadModelMatrix(const Matrix4x4& value);
     //void LoadViewMatrix(const Camera& camera);
-    void LoadProjectionMatrix(const Matrix4x4f& value);
+    void LoadProjectionMatrix(const Matrix4x4& value);
 private:
     GLint modelMatrixLocation_;
     GLint viewMatrixLocation_;

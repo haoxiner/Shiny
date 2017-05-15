@@ -38,22 +38,23 @@ inline float DegreesToRadians(float degrees)
     return glm::radians(degrees);
 }
 
-using Vector2f = glm::vec2;
-using Vector3f = glm::vec3;
+using Float2 = glm::vec2;
+using Float3 = glm::vec3;
+using Float4 = glm::vec4;
 using Quaternion = glm::quat;
-using Matrix4x4f = glm::mat4;
+using Matrix4x4 = glm::mat4;
 
 /*
 * quaternion to matrix4x4
 */
-inline Matrix4x4f QuaternionToMatrix(const Quaternion& quaternion)
+inline Matrix4x4 QuaternionToMatrix(const Quaternion& quaternion)
 {
     return glm::mat4_cast(quaternion);
 }
 
-inline Matrix4x4f MakeTranslationMatrix(const Vector3f& vec3f)
+inline Matrix4x4 MakeTranslationMatrix(const Float3& vec3f)
 {
-    Matrix4x4f identity(1.0f);
+    Matrix4x4 identity(1.0f);
     return glm::translate(identity, vec3f);
 }
 }

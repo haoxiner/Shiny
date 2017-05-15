@@ -13,6 +13,9 @@
     <Filter Include="GPUData">
       <UniqueIdentifier>{de8ccaf5-e28f-4c05-bf81-32a30cdf1603}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{0210e274-2e30-4e26-88e7-402072645f2a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MathUtil.h">
@@ -45,6 +48,12 @@
     <ClInclude Include="RenderingSystem.h">
       <Filter>Shiny</Filter>
     </ClInclude>
+    <ClInclude Include="VertexShader.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexAttribute.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -70,6 +79,12 @@
     </ClCompile>
     <ClCompile Include="RenderingSystem.cpp">
       <Filter>Shiny</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexShader.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexAttribute.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

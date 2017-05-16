@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Display.h" />
+    <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="Model.h" />
@@ -152,11 +153,13 @@
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="StaticShader.h" />
     <ClInclude Include="Texture.h" />
-    <ClInclude Include="VertexAttribute.h" />
-    <ClInclude Include="VertexShader.h" />
+    <ClInclude Include="UniformBlock.h" />
+    <ClInclude Include="UniformBlockDescription.h" />
+    <ClInclude Include="VertexAttributeDescription.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Display.cpp" />
+    <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="PerformanceTimer.cpp" />
@@ -164,8 +167,9 @@
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="Shiny.cpp" />
     <ClCompile Include="StaticShader.cpp" />
-    <ClCompile Include="VertexAttribute.cpp" />
-    <ClCompile Include="VertexShader.cpp" />
+    <ClCompile Include="UniformBlock.cpp" />
+    <ClCompile Include="UniformBlockDescription.cpp" />
+    <ClCompile Include="VertexAttributeDescription.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

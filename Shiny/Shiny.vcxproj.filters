@@ -48,10 +48,16 @@
     <ClInclude Include="RenderingSystem.h">
       <Filter>Shiny</Filter>
     </ClInclude>
-    <ClInclude Include="VertexShader.h">
+    <ClInclude Include="UniformBlockDescription.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="VertexAttribute.h">
+    <ClInclude Include="UniformBlock.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="GLSLProgram.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexAttributeDescription.h">
       <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
@@ -80,10 +86,16 @@
     <ClCompile Include="RenderingSystem.cpp">
       <Filter>Shiny</Filter>
     </ClCompile>
-    <ClCompile Include="VertexShader.cpp">
+    <ClCompile Include="VertexAttributeDescription.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="VertexAttribute.cpp">
+    <ClCompile Include="GLSLProgram.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="UniformBlock.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="UniformBlockDescription.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>

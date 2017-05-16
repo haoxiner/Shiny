@@ -11,8 +11,11 @@ public:
         FLOAT, FLOAT2, FLOAT3, FLOAT4,
         INT, INT2, INT3, INT4
     };
-    const std::string& GetFormatName() const;
-    Format format;
-    std::string name;
+    VertexAttributeDescription(const Format format, const std::string& name);
+    std::string GetSourceCode() const;
+    std::string GetFormatName() const;
+private:
+    Format format_;
+    std::string name_;
 };
 }

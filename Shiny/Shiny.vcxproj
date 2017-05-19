@@ -156,6 +156,8 @@
     <ClInclude Include="UniformBlock.h" />
     <ClInclude Include="UniformBlockDescription.h" />
     <ClInclude Include="VertexAttributeDescription.h" />
+    <ClInclude Include="VertexBuffer.h" />
+    <ClInclude Include="VertexBufferLayout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Display.cpp" />
@@ -170,6 +172,7 @@
     <ClCompile Include="UniformBlock.cpp" />
     <ClCompile Include="UniformBlockDescription.cpp" />
     <ClCompile Include="VertexAttributeDescription.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

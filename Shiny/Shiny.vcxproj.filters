@@ -60,6 +60,12 @@
     <ClInclude Include="VertexAttributeDescription.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="VertexBuffer.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexBufferLayout.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -97,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="UniformBlockDescription.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexBuffer.cpp">
+      <Filter>GPUData</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 #pragma once
-#include "Model.h"
 #include "Material.h"
+#include "Platform.h"
 namespace Shiny
 {
 class RenderingSystem
@@ -12,7 +12,6 @@ public:
     void DisableCullFace();
     void SetViewport(int x, int y, int width, int height);
     void SetMaterial(Material* material);
-    void Render(Model* model);
 private:
 
 };

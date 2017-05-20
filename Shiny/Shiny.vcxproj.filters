@@ -16,6 +16,12 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{0210e274-2e30-4e26-88e7-402072645f2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{677ddf43-7a51-4957-b737-73c74e391f86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b47ededa-37e8-4a9e-97d3-5b633645673c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MathUtil.h">
@@ -36,12 +42,6 @@
     <ClInclude Include="ShaderProgram.h">
       <Filter>Platform</Filter>
     </ClInclude>
-    <ClInclude Include="StaticShader.h">
-      <Filter>Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>GPUData</Filter>
-    </ClInclude>
     <ClInclude Include="Texture.h">
       <Filter>GPUData</Filter>
     </ClInclude>
@@ -60,10 +60,7 @@
     <ClInclude Include="VertexAttributeDescription.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="VertexBuffer.h">
-      <Filter>GPUData</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexBufferLayout.h">
+    <ClInclude Include="Mesh.h">
       <Filter>GPUData</Filter>
     </ClInclude>
   </ItemGroup>
@@ -83,12 +80,6 @@
     <ClCompile Include="ShaderProgram.cpp">
       <Filter>Platform</Filter>
     </ClCompile>
-    <ClCompile Include="StaticShader.cpp">
-      <Filter>Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>GPUData</Filter>
-    </ClCompile>
     <ClCompile Include="RenderingSystem.cpp">
       <Filter>Shiny</Filter>
     </ClCompile>
@@ -104,8 +95,16 @@
     <ClCompile Include="UniformBlockDescription.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="VertexBuffer.cpp">
+    <ClCompile Include="Mesh.cpp">
       <Filter>GPUData</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\pbr.vert.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\pbr.frag.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

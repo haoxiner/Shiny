@@ -31,8 +31,3 @@ void Shiny::RenderingSystem::SetViewport(int x, int y, int width, int height)
 void Shiny::RenderingSystem::SetMaterial(Material* material)
 {
 }
-
-void Shiny::RenderingSystem::Render(Model* model)
-{
-    model->Render();
-}

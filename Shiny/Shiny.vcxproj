@@ -146,33 +146,32 @@
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MathUtil.h" />
-    <ClInclude Include="Model.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="PerformanceTimer.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="ShaderProgram.h" />
-    <ClInclude Include="StaticShader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="UniformBlock.h" />
     <ClInclude Include="UniformBlockDescription.h" />
     <ClInclude Include="VertexAttributeDescription.h" />
-    <ClInclude Include="VertexBuffer.h" />
-    <ClInclude Include="VertexBufferLayout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PerformanceTimer.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="Shiny.cpp" />
-    <ClCompile Include="StaticShader.cpp" />
     <ClCompile Include="UniformBlock.cpp" />
     <ClCompile Include="UniformBlockDescription.cpp" />
     <ClCompile Include="VertexAttributeDescription.cpp" />
-    <ClCompile Include="VertexBuffer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\pbr.frag.glsl" />
+    <None Include="Shaders\pbr.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

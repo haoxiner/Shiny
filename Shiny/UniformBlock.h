@@ -10,9 +10,6 @@ public:
     GLuint GetID() const;
 protected:
     bool Startup();
-    void BindBuffer();
-    void UnBindBuffer();
-private:
     GLuint id_ = 0;
 };
 class DynamicUniformBlock : public UniformBlock

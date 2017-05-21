@@ -9,6 +9,7 @@ public:
     Mesh(int numOfAttibutePerVertex);
     ~Mesh();
     void LoadVertexAttribute(int index, int numOfChannel, bool normalized, const std::vector<short>& data);
+    void LoadVertexAttribute(int index, int numOfChannel, const std::vector<float>& data);
     void LoadIndices(const std::vector<unsigned short>& indices);
     void LoadIndices(const std::vector<unsigned int>& indices);
     void Render();

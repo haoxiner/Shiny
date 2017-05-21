@@ -3,13 +3,16 @@
 #include <iostream>
 #include <vector>
 
+Shiny::ShaderProgram::ShaderProgram()
+{
+    program_ = glCreateProgram();
+}
+
 bool Shiny::ShaderProgram::Startup(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
     auto vertexShader = LoadShader(vertexShaderSource, GL_VERTEX_SHADER);
     auto fragmentShader = LoadShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
-    program_ = glCreateProgram();
     glAttachShader(program_, vertexShader);
     glAttachShader(program_, fragmentShader);
-    BindAttributes();
     glLinkProgram(program_);
     glDetachShader(program_, vertexShader);
     glDetachShader(program_, fragmentShader);
@@ -24,7 +27,6 @@ bool Shiny::ShaderProgram::Startup(const std::string& vertexShaderSource, const 
         glGetProgramInfoLog(program_, logLength, &logLength, &infoLog[0]);
         std::cerr << &infoLog[0] << std::endl;
     }
-    GetAllUniformLocations();
     return true;
 }
 
@@ -53,31 +55,6 @@ void Shiny::ShaderProgram::Use() {
 
 void Shiny::ShaderProgram::Shutdown() {
     glDeleteProgram(program_);
-}
-
-void Shiny::ShaderProgram::BindAttributeLocation(GLuint attributeLocation, const std::string& name) {
-    glBindAttribLocation(program_, attributeLocation, name.c_str());
-}
-
-GLint Shiny::ShaderProgram::GetUniformLocation(const std::string& name) {
-    return glGetUniformLocation(program_, name.c_str());
-}
-
-void Shiny::ShaderProgram::LoadInteger(GLint location, int value)
-{
-    glUniform1i(location, value);
-}
-
-void Shiny::ShaderProgram::LoadFloat(GLint location, float value) {
-    glUniform1f(location, value);
-}
-
-void Shiny::ShaderProgram::LoadVector(GLint location, const Float3& value) {
-    glUniform3fv(location, 1, &value[0]);
-}
-
-void Shiny::ShaderProgram::LoadMatrix(GLint location, const Matrix4x4& value) {
-    glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
 }
 
 GLuint Shiny::ShaderProgram::LoadShader(const std::string& source, GLenum type) {

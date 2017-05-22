@@ -69,6 +69,9 @@
     <ClInclude Include="Game.h">
       <Filter>Game</Filter>
     </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -107,12 +110,18 @@
     <ClCompile Include="Game.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\pbr.vert.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\pbr.frag.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\cullLight.comp.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

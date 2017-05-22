@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "ResourceManager.h"
 #include <fstream>
 bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 {
@@ -8,12 +9,12 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
     std::vector<short> positions = {
-        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(0.0f),
+        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(1.0f),
         MapToShort(-0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f)
+        MapToShort(0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(1.0f)
     };
     std::vector<short> normals = {
-        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(0.0f),
+        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(1.0f),
         MapToShort(-0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f),
         MapToShort(0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f)
     };
@@ -24,17 +25,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     mesh.LoadVertexAttribute(1, 4, true, normals);
     mesh.LoadIndices(indices);
 
-    std::ifstream vsFile("./Shaders/pbr.vert.glsl");
-    std::istreambuf_iterator<char> vsBegin(vsFile), vsEnd;
-    std::string vertexShaderSource(vsBegin, vsEnd);
-    vsFile.close();
-    vsFile.clear();
-    std::ifstream fsFile("./Shaders/pbr.frag.glsl");
-    std::istreambuf_iterator<char> fsBegin(fsFile), fsEnd;
-    std::string fragmentShaderSource(fsBegin, fsEnd);
-    fsFile.close();
-    fsFile.clear();
-    shaderProgram_.Startup(vertexShaderSource, fragmentShaderSource);
+    shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/pbr.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/pbr.frag.glsl"));
     return true;
 }
 

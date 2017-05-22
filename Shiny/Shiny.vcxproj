@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="Display.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="Input.h" />
@@ -160,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Display.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -173,6 +175,7 @@
     <ClCompile Include="VertexAttributeDescription.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\cullLight.comp.glsl" />
     <None Include="Shaders\pbr.frag.glsl" />
     <None Include="Shaders\pbr.vert.glsl" />
   </ItemGroup>

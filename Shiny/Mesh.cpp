@@ -31,7 +31,11 @@ void Shiny::Mesh::LoadVertexAttribute(int index, int numOfChannel, bool normaliz
     glNamedBufferData(vboList_[index], data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
     glEnableVertexArrayAttrib(vao_, index);
     glVertexArrayVertexBuffer(vao_, index, vboList_[index], 0, numOfChannel * sizeof(data[0]));
-    glVertexArrayAttribFormat(vao_, index, numOfChannel, GL_SHORT, normalized ? GL_TRUE : GL_FALSE, 0);
+    if (normalized) {
+        glVertexArrayAttribFormat(vao_, index, numOfChannel, GL_SHORT, GL_TRUE, 0);
+    } else {
+        glVertexArrayAttribIFormat(vao_, index, numOfChannel, GL_SHORT, 0);
+    }
     glVertexArrayAttribBinding(vao_, index, index);
 
     //glBindVertexArray(vao_);
@@ -59,7 +63,6 @@ void Shiny::Mesh::LoadVertexAttribute(int index, int numOfChannel, const std::ve
     glVertexArrayVertexBuffer(vao_, index, vboList_[index], 0, numOfChannel * sizeof(data[0]));
     glVertexArrayAttribFormat(vao_, index, numOfChannel, GL_FLOAT, GL_FALSE, 0);
     glVertexArrayAttribBinding(vao_, index, 0);
-    
 }
 
 void Shiny::Mesh::LoadIndices(const std::vector<unsigned short>& indices)

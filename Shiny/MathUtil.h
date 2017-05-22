@@ -38,6 +38,16 @@ inline float DegreesToRadians(float degrees)
     return glm::radians(degrees);
 }
 
+/*
+* map float of [-1.0, 1.0] to short
+*/
+inline short MapToShort(float value)
+{
+    constexpr float mapToPositive = 32767.0f;
+    constexpr float mapToNegative = 32768.0f;
+    return static_cast<short>((value >= 0 ? mapToPositive * value : mapToNegative * value) + 0.5f);
+}
+
 using Float2 = glm::vec2;
 using Float3 = glm::vec3;
 using Float4 = glm::vec4;

@@ -63,6 +63,12 @@
     <ClInclude Include="Mesh.h">
       <Filter>GPUData</Filter>
     </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -97,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
       <Filter>GPUData</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -48,7 +48,7 @@ int TestComputShader()
     }
 
     Shiny::ShaderProgram computeShaderProgram;
-    computeShaderProgram.Startup(Shiny::ResourceManager::ReadFileToString("./Shaders/cullLight.comp.glsl"));
+    computeShaderProgram.Startup(Shiny::ResourceManager::ReadFileToString("./Shaders/LightCulling.comp.glsl"));
     computeShaderProgram.Use();
     GLuint buffer;
     glCreateBuffers(1, &buffer);

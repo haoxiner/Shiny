@@ -175,9 +175,9 @@
     <ClCompile Include="VertexAttributeDescription.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\cullLight.comp.glsl" />
-    <None Include="Shaders\pbr.frag.glsl" />
-    <None Include="Shaders\pbr.vert.glsl" />
+    <None Include="Shaders\LightCulling.comp.glsl" />
+    <None Include="Shaders\PBR.frag.glsl" />
+    <None Include="Shaders\PBR.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

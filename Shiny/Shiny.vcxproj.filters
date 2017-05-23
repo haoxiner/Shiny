@@ -115,13 +115,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\pbr.vert.glsl">
+    <None Include="Shaders\PBR.frag.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\pbr.frag.glsl">
+    <None Include="Shaders\PBR.vert.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\cullLight.comp.glsl">
+    <None Include="Shaders\LightCulling.comp.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

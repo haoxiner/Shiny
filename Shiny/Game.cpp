@@ -25,7 +25,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     mesh.LoadVertexAttribute(1, 4, true, normals);
     mesh.LoadIndices(indices);
 
-    shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/pbr.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/pbr.frag.glsl"));
+    shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
     return true;
 }
 

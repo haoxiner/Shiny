@@ -48,12 +48,21 @@ int TestComputShader()
     }
 
     Shiny::ShaderProgram computeShaderProgram;
-    computeShaderProgram.Startup(Shiny::ResourceManager::ReadFileToString("./Shaders/cullLight.compute.glsl"));
+    computeShaderProgram.Startup(Shiny::ResourceManager::ReadFileToString("./Shaders/cullLight.comp.glsl"));
     computeShaderProgram.Use();
-    //GLuint buffer;
-    //glCreateBuffers(1, &buffer);
-    //glNamedBufferStorage(buffer, sizeof(float), nullptr, GL_MAP_WRITE_BIT);
-    //glDispatchCompute(1, 1, 1);
+    GLuint buffer;
+    glCreateBuffers(1, &buffer);
+    int initData = 0;
+    glNamedBufferStorage(buffer, sizeof(int), &initData, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+    auto pBuffer = glMapNamedBuffer(buffer, GL_WRITE_ONLY);
+    *(int*)pBuffer = 1024;
+    glUnmapNamedBuffer(buffer);
+
+    glDispatchCompute(1, 1, 1);
+    pBuffer = glMapNamedBuffer(buffer, GL_READ_ONLY);
+    std::cerr << *(int*)pBuffer << std::endl;
+    glUnmapNamedBuffer(buffer);
     display.Shutdown();
     return 0;
 }

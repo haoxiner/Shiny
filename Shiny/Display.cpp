@@ -20,10 +20,7 @@ bool Shiny::Display::Startup(int xResolution, int yResolution) {
     if (!glContext) {
         return false;
     }
-    if (SDL_GL_SetSwapInterval(1) < 0) {
-        return false;
-    }
-    //SDL_GL_SetSwapInterval(0);
+    SDL_GL_SetSwapInterval(0);
     //    SDL_SetRelativeMouseMode(SDL_TRUE);
     glewExperimental = true;
     glewInit();

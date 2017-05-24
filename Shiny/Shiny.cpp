@@ -52,16 +52,18 @@ int TestComputShader()
     computeShaderProgram.Use();
     GLuint buffer;
     glCreateBuffers(1, &buffer);
-    int initData = 0;
-    glNamedBufferStorage(buffer, sizeof(int), &initData, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
+    int initData[2] = { 0,0 };
+    glNamedBufferStorage(buffer, sizeof(int) * 2, &initData, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
     auto pBuffer = glMapNamedBuffer(buffer, GL_WRITE_ONLY);
     *(int*)pBuffer = 1024;
+    *((int*)pBuffer + 1) = 0;
     glUnmapNamedBuffer(buffer);
 
     glDispatchCompute(1, 1, 1);
     pBuffer = glMapNamedBuffer(buffer, GL_READ_ONLY);
     std::cerr << *(int*)pBuffer << std::endl;
+    std::cerr << *((int*)pBuffer + 1) << std::endl;
     glUnmapNamedBuffer(buffer);
     display.Shutdown();
     return 0;

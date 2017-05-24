@@ -46,6 +46,9 @@ bool Shiny::ShaderProgram::Startup(const std::string& computeShaderSource) {
         glGetProgramInfoLog(program_, logLength, &logLength, &infoLog[0]);
         std::cerr << &infoLog[0] << std::endl;
     }
+    int size[3];
+    glGetProgramiv(program_, GL_COMPUTE_WORK_GROUP_SIZE, size);
+    std::cerr << "Work group size is " << size[0] << "x" << size[1] << "x" << size[2] << std::endl;
     return true;
 }
 

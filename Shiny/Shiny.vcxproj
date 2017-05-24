@@ -143,6 +143,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Display.h" />
+    <ClInclude Include="Entity.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MathUtil.h" />
@@ -158,6 +161,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Display.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -170,8 +175,9 @@
     <ClCompile Include="VertexAttributeDescription.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\pbr.frag.glsl" />
-    <None Include="Shaders\pbr.vert.glsl" />
+    <None Include="Shaders\LightCulling.comp.glsl" />
+    <None Include="Shaders\PBR.frag.glsl" />
+    <None Include="Shaders\PBR.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

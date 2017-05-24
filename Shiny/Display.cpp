@@ -1,6 +1,6 @@
 #include "Display.h"
 #include "Platform.h"
-#include <sstream>
+#include <iostream>
 
 bool Shiny::Display::Startup(int xResolution, int yResolution) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
@@ -10,7 +10,13 @@ bool Shiny::Display::Startup(int xResolution, int yResolution) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
 
     window_ = SDL_CreateWindow("Project Dragon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xResolution, yResolution, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (window_ == nullptr) {
@@ -20,11 +26,19 @@ bool Shiny::Display::Startup(int xResolution, int yResolution) {
     if (!glContext) {
         return false;
     }
+    if (SDL_GL_SetSwapInterval(1) < 0) {
+        return false;
+    }
+    
     SDL_GL_SetSwapInterval(0);
     //    SDL_SetRelativeMouseMode(SDL_TRUE);
     glewExperimental = true;
     glewInit();
-
+    
+    int a = 0, b = 0;
+    std::cerr << SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &a) << ": " << a << std::endl;
+    std::cerr << SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &b) << ": " << b << std::endl;
+    glEnable(GL_MULTISAMPLE);
     running_ = true;
     return true;
 }

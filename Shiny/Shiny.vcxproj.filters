@@ -63,6 +63,15 @@
     <ClInclude Include="Mesh.h">
       <Filter>GPUData</Filter>
     </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -98,12 +107,21 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>GPUData</Filter>
     </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\pbr.vert.glsl">
+    <None Include="Shaders\PBR.frag.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\pbr.frag.glsl">
+    <None Include="Shaders\PBR.vert.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\LightCulling.comp.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

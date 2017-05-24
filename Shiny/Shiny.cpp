@@ -3,15 +3,11 @@
 #include "RenderingSystem.h"
 #include "Mesh.h"
 #include "ShaderProgram.h"
+#include "Game.h"
+#include "ResourceManager.h"
 #include <fstream>
 #include <iostream>
 
-short MapToShort(float value)
-{
-    constexpr float mapToPositive = 32767.0f;
-    constexpr float mapToNegative = 32768.0f;
-    return static_cast<short>(value >= 0 ? mapToPositive * value : mapToNegative * value);
-}
 int TestDisplay()
 {
     constexpr int xResolution = 800;
@@ -20,56 +16,11 @@ int TestDisplay()
     if (!display.Startup(xResolution, yResolution)) {
         return 1;
     }
-    Shiny::RenderingSystem renderingSystem;
-    renderingSystem.EnableDepthTest();
-    renderingSystem.EnableCullFace();
-    renderingSystem.SetViewport(0, 0, xResolution, yResolution);
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-
-    
-    std::vector<short> positions = {
-        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(-0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f)
-    };
-    std::vector<short> normals = {
-        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(-0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f)
-    };
-    //std::vector<float> positions = {
-    //    (0.5f), (0.5f), (0.0f), (0.0f),
-    //    (-0.5f), (-0.5f), (0.0f), (0.0f),
-    //    (0.5f), (-0.5f), (0.0f), (0.0f)
-    //};
-    //std::vector<float> normals = {
-    //    (0.5f), (0.5f), (0.0f), (0.0f),
-    //    (-0.5f), (-0.5f), (0.0f), (0.0f),
-    //    (0.5f), (-0.5f), (0.0f), (0.0f)
-    //};
-    std::vector<unsigned int> indices = { 0,1,2 };
-
-    Shiny::Mesh mesh(2);
-    mesh.LoadVertexAttribute(0, 4, true, positions);
-    mesh.LoadVertexAttribute(1, 4, true, normals);
-    mesh.LoadIndices(indices);
-    
-
-    std::ifstream vsFile("./Shaders/pbr.vert.glsl");
-    std::istreambuf_iterator<char> vsBegin(vsFile), vsEnd;
-    std::string vertexShaderSource(vsBegin, vsEnd);
-    vsFile.close();
-    vsFile.clear();
-    std::ifstream fsFile("./Shaders/pbr.frag.glsl");
-    std::istreambuf_iterator<char> fsBegin(fsFile), fsEnd;
-    std::string fragmentShaderSource(fsBegin, fsEnd);
-    fsFile.close();
-    fsFile.clear();
-    Shiny::ShaderProgram shaderProgram;
-    shaderProgram.Startup(vertexShaderSource, fragmentShaderSource);
-    
     // input device
     auto input = display.GetInput();
+    // Game
+    Shiny::Game game;
+    game.Startup(xResolution, yResolution, input);
     // tick
     float deltaTime = 0.0f;
     Shiny::PerformanceTimer performanceTimer;
@@ -78,9 +29,8 @@ int TestDisplay()
     while (display.Running()) {
         performanceTimer.Tick();
         deltaTime = performanceTimer.GetDeltaTime();
-        shaderProgram.Use();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        mesh.Render();
+        game.Update(deltaTime);
+        game.Render();
         display.Update();
         if (input->Quit()) {
             display.Shutdown();
@@ -88,8 +38,38 @@ int TestDisplay()
     }
     return 0;
 }
+int TestComputShader()
+{
+    constexpr int xResolution = 800;
+    constexpr int yResolution = 600;
+    Shiny::Display display;
+    if (!display.Startup(xResolution, yResolution)) {
+        return 1;
+    }
+
+    Shiny::ShaderProgram computeShaderProgram;
+    computeShaderProgram.Startup(Shiny::ResourceManager::ReadFileToString("./Shaders/LightCulling.comp.glsl"));
+    computeShaderProgram.Use();
+    GLuint buffer;
+    glCreateBuffers(1, &buffer);
+    int initData[2] = { 0,0 };
+    glNamedBufferStorage(buffer, sizeof(int) * 2, &initData, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+    auto pBuffer = glMapNamedBuffer(buffer, GL_WRITE_ONLY);
+    *(int*)pBuffer = 1024;
+    *((int*)pBuffer + 1) = 0;
+    glUnmapNamedBuffer(buffer);
+
+    glDispatchCompute(1, 1, 1);
+    pBuffer = glMapNamedBuffer(buffer, GL_READ_ONLY);
+    std::cerr << *(int*)pBuffer << std::endl;
+    std::cerr << *((int*)pBuffer + 1) << std::endl;
+    glUnmapNamedBuffer(buffer);
+    display.Shutdown();
+    return 0;
+}
 int main()
 {
-    TestDisplay();
+    TestComputShader();
     return 0;
 }

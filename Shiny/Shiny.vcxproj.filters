@@ -72,6 +72,18 @@
     <ClInclude Include="ResourceManager.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Configuration.h">
+      <Filter>Shiny</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -112,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -27,7 +27,3 @@ void Shiny::RenderingSystem::SetViewport(int x, int y, int width, int height)
 {
     glViewport(x, y, width, height);
 }
-
-void Shiny::RenderingSystem::SetMaterial(Material* material)
-{
-}

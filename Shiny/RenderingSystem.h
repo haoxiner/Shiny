@@ -11,7 +11,6 @@ public:
     void EnableCullFace();
     void DisableCullFace();
     void SetViewport(int x, int y, int width, int height);
-    void SetMaterial(Material* material);
 private:
 
 };

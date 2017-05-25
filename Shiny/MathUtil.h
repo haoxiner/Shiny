@@ -51,20 +51,45 @@ inline short MapToShort(float value)
 using Float2 = glm::vec2;
 using Float3 = glm::vec3;
 using Float4 = glm::vec4;
-using Quaternion = glm::quat;
+using Quaternion = Float4;
 using Matrix4x4 = glm::mat4;
 
 /*
-* quaternion to matrix4x4
+* Make ViewToProjection Transform
+*/
+inline Matrix4x4 MakePerspectiveProjectionMatrix(float verticalFov, float aspect, float zNear, float zFar)
+{
+    return glm::perspective(verticalFov, aspect, zNear, zFar);
+}
+
+/*
+* Quaternion To Matrix4x4
 */
 inline Matrix4x4 QuaternionToMatrix(const Quaternion& quaternion)
 {
-    return glm::mat4_cast(quaternion);
+    float xy = quaternion.x * quaternion.y;
+    float yz = quaternion.y * quaternion.z;
+    float zx = quaternion.z * quaternion.x;
+    float x2 = quaternion.x * quaternion.x;
+    float y2 = quaternion.y * quaternion.y;
+    float z2 = quaternion.z * quaternion.z;
+    float xw = quaternion.x * quaternion.w;
+    float yw = quaternion.y * quaternion.w;
+    float zw = quaternion.z * quaternion.w;
+    return Matrix4x4(1.0 - 2.0*(y2 + z2), 2.0*(xy - zw), 2.0*(zx + yw), 0.0,
+                     2.0*(xy + zw), 1.0 - 2.0*(x2 + z2), 2.0*(yz - xw), 0.0,
+                     2.0*(zx - yw), 2.0*(yz + xw), 1.0 - 2.0*(x2 + y2), 0.0,
+                     0.0, 0.0, 0.0, 1.0);
 }
 
-inline Matrix4x4 MakeTranslationMatrix(const Float3& vec3f)
+/*
+* Translate
+*/
+inline Matrix4x4 MakeTranslationMatrix(const Float3& vector3f)
 {
-    Matrix4x4 identity(1.0f);
-    return glm::translate(identity, vec3f);
+    return Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
+                     0.0f, 1.0f, 0.0f, 0.0f,
+                     0.0f, 0.0f, 1.0f, 0.0f,
+                     vector3f.x, vector3f.y, vector3f.z, 1.0f);
 }
 }

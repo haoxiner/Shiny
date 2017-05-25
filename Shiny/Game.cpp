@@ -55,13 +55,17 @@ void Shiny::Game::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
-        auto perFrameBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
+        auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
         auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 40.0f));
         auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 40.0f));
         Quaternion quat(0.0f, 0.0f, sinTheta, cosTheta);
-        perFrameBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,sinTheta * 0.8f - 0.9f)) * QuaternionToMatrix(quat);
-        perFrameBuffer->worldToView = Matrix4x4(1.0f);
+        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,sinTheta * 0.8f - 0.9f)) * QuaternionToMatrix(quat);
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
+
+        auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
+        perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
+        perFrameBuffer->worldToView = Matrix4x4(1.0f);
+        glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
         mesh.Render();
     }
 }

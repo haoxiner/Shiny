@@ -24,11 +24,11 @@ private:
     struct PerObjectConstantBuffer
     {
         Matrix4x4 modelToWorld;
-        Matrix4x4 worldToView;
     };
     struct PerFrameConstantBuffer
     {
         Float4 data;
+        Matrix4x4 worldToView;
     };
     struct StaticConstantBuffer
     {

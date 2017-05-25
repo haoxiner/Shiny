@@ -43,6 +43,7 @@ private:
     };
     std::vector<GLuint> constantBufferList_;
     GLuint textureID_;
+    GLuint samplerID_;
     float testFloat_ = 0.0f;
 };
 }

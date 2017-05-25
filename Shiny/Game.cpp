@@ -3,6 +3,7 @@
 #include "FreeImage.h"
 #include <fstream>
 #include <iostream>
+#include <memory>
 bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 {
     // OpenGL State
@@ -47,14 +48,24 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         glBindBufferBase(GL_UNIFORM_BUFFER, i, constantBufferList_[i]);
     }
 
-    glGenTextures(1, &textureID_);
+    
     unsigned int w(0), h(0);
-    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "G:\\haoxin\\mitsuba-af602c6fd98a\\data\\tests\\envmap.exr");
-    //BYTE* bits = FreeImage_GetBits(dib);
+    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../envmap.exr");
+    auto colorType = FreeImage_GetColorType(dib);
+    auto bpp = FreeImage_GetBPP(dib);
     w = FreeImage_GetWidth(dib);
     h = FreeImage_GetHeight(dib);
+    auto bits = FreeImage_GetBits(dib);
+    glCreateTextures(GL_TEXTURE_2D, 1, &textureID_);
+    glTextureStorage2D(textureID_, 1, GL_RGB32F, w, h);
+    glTextureSubImage2D(textureID_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
     FreeImage_Unload(dib);
-    std::cerr << w << "," << h << std::endl;
+    glCreateSamplers(1, &samplerID_);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindSampler(0, samplerID_);
+    glBindTextureUnit(0, textureID_);
+    
     return true;
 }
 
@@ -69,8 +80,8 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        auto sinTheta = 0.0 * std::sinf(DegreesToRadians(testFloat_ * 40.0f));
-        auto cosTheta = 1.0 + 0.0 * std::cosf(DegreesToRadians(testFloat_ * 40.0f));
+        auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 40.0f));
+        auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 40.0f));
         Quaternion quat(0.0f, 0.0f, sinTheta, cosTheta);
         perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,sinTheta * 0.8f - 0.9f)) * QuaternionToMatrix(quat);
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);

@@ -42,6 +42,7 @@ private:
         NUM_OF_CONSTANT_BUFFER
     };
     std::vector<GLuint> constantBufferList_;
+    GLuint textureID_;
     float testFloat_ = 0.0f;
 };
 }

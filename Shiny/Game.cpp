@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "ResourceManager.h"
+#include "FreeImage.h"
 #include <fstream>
+#include <iostream>
 bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 {
     // OpenGL State
@@ -11,16 +13,18 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 
     // Load Meshes
     std::vector<short> positions = {
-        MapToShort(0.5f), MapToShort(0.5f), MapToShort(0.0f), MapToShort(1.0f),
-        MapToShort(-0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(0.5f), MapToShort(-0.5f), MapToShort(0.0f), MapToShort(1.0f)
+        MapToShort(1.0f), MapToShort(1.0f), MapToShort(0.0f), MapToShort(1.0f),
+        MapToShort(-1.0f), MapToShort(1.0f), MapToShort(0.0f), MapToShort(0.0f),
+        MapToShort(-1.0f), MapToShort(-1.0f), MapToShort(0.0f), MapToShort(0.0f),
+        MapToShort(1.0f), MapToShort(-1.0f), MapToShort(0.0f), MapToShort(1.0f)
     };
     std::vector<short> normals = {
+        MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(1.0f),
         MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(1.0f),
         MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(0.0f),
         MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(0.0f)
     };
-    std::vector<unsigned int> indices = { 0,1,2 };
+    std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
     mesh.LoadVertexAttribute(0, 4, true, positions);
@@ -42,6 +46,15 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     for (int i = 0; i < constantBufferList_.size(); i++) {
         glBindBufferBase(GL_UNIFORM_BUFFER, i, constantBufferList_[i]);
     }
+
+    glGenTextures(1, &textureID_);
+    unsigned int w(0), h(0);
+    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "G:\\haoxin\\mitsuba-af602c6fd98a\\data\\tests\\envmap.exr");
+    //BYTE* bits = FreeImage_GetBits(dib);
+    w = FreeImage_GetWidth(dib);
+    h = FreeImage_GetHeight(dib);
+    FreeImage_Unload(dib);
+    std::cerr << w << "," << h << std::endl;
     return true;
 }
 
@@ -56,8 +69,8 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 40.0f));
-        auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 40.0f));
+        auto sinTheta = 0.0 * std::sinf(DegreesToRadians(testFloat_ * 40.0f));
+        auto cosTheta = 1.0 + 0.0 * std::cosf(DegreesToRadians(testFloat_ * 40.0f));
         Quaternion quat(0.0f, 0.0f, sinTheta, cosTheta);
         perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,sinTheta * 0.8f - 0.9f)) * QuaternionToMatrix(quat);
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);

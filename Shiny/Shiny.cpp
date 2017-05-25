@@ -70,6 +70,6 @@ int TestComputShader()
 }
 int main()
 {
-    TestComputShader();
+    TestDisplay();
     return 0;
 }

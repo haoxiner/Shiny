@@ -28,7 +28,8 @@ void Shiny::Mesh::LoadVertexAttribute(int index, int numOfChannel, bool normaliz
     if (index >= vboList_.size() - 1) {
         return;
     }
-    glNamedBufferData(vboList_[index], data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
+    glNamedBufferStorage(vboList_[index], sizeof(data[0]) * data.size(), data.data(), 0);
+    //glNamedBufferData(vboList_[index], data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
     glEnableVertexArrayAttrib(vao_, index);
     glVertexArrayVertexBuffer(vao_, index, vboList_[index], 0, numOfChannel * sizeof(data[0]));
     if (normalized) {
@@ -58,7 +59,8 @@ void Shiny::Mesh::LoadVertexAttribute(int index, int numOfChannel, const std::ve
     if (index >= vboList_.size() - 1) {
         return;
     }
-    glNamedBufferData(vboList_[index], data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
+    glNamedBufferStorage(vboList_[index], sizeof(data[0]) * data.size(), data.data(), 0);
+    //glNamedBufferData(vboList_[index], data.size() * sizeof(data[0]), data.data(), GL_STATIC_DRAW);
     glEnableVertexArrayAttrib(vao_, index);
     glVertexArrayVertexBuffer(vao_, index, vboList_[index], 0, numOfChannel * sizeof(data[0]));
     glVertexArrayAttribFormat(vao_, index, numOfChannel, GL_FLOAT, GL_FALSE, 0);
@@ -93,6 +95,7 @@ void Shiny::Mesh::LoadIndices(const void* data, int size)
     //glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
     //glBindVertexArray(0);
     //return;
-    glNamedBufferData(vboList_.back(), size, data, GL_STATIC_DRAW);
+    glNamedBufferStorage(vboList_.back(), size, data, 0);
+    //glNamedBufferData(vboList_.back(), size, data, GL_STATIC_DRAW);
     glVertexArrayElementBuffer(vao_, vboList_.back());
 }

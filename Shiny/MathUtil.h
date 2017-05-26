@@ -83,13 +83,20 @@ inline Matrix4x4 QuaternionToMatrix(const Quaternion& quaternion)
 }
 
 /*
-* Translate
+* Translate By XYZ
 */
-inline Matrix4x4 MakeTranslationMatrix(const Float3& vector3f)
+inline Matrix4x4 MakeTranslationMatrix(float x, float y, float z)
 {
     return Matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
                      0.0f, 1.0f, 0.0f, 0.0f,
                      0.0f, 0.0f, 1.0f, 0.0f,
-                     vector3f.x, vector3f.y, vector3f.z, 1.0f);
+                     x, y, z, 1.0f);
+}
+/*
+* Translate By Vector3f
+*/
+inline Matrix4x4 MakeTranslationMatrix(const Float3& vector3f)
+{
+    return MakeTranslationMatrix(vector3f.x, vector3f.y, vector3f.z);
 }
 }

@@ -13,8 +13,8 @@ public:
     void Use();
     void Shutdown();
     GLuint GetID() const { return program_; }
+    static GLuint LoadShader(const std::string& source, GLenum type);
 private:
-    GLuint LoadShader(const std::string& source, GLenum type);
     GLuint program_;
 };
 }

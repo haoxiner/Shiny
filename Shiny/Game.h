@@ -19,6 +19,7 @@ public:
 private:
     RenderingSystem renderingSystem_;
     ShaderProgram shaderProgram_;
+    ShaderProgram skyBoxShaderProgram_;
     std::vector<Mesh> meshes_;
 
     struct PerObjectConstantBuffer

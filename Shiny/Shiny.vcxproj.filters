@@ -84,6 +84,9 @@
     <ClInclude Include="Engine.h">
       <Filter>Game</Filter>
     </ClInclude>
+    <ClInclude Include="SkyBox.h">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -128,6 +131,9 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\PBR.frag.glsl">
@@ -137,6 +143,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\LightCulling.comp.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\SkyBox.frag.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\SkyBox.vert.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

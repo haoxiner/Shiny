@@ -22,5 +22,5 @@ void main()
 	float diffuse = max(0.0, dot(omegaI, n));
 	float specular = pow(max(0.0, dot(n, h)), 10.0);
 
-	fragColor = texture(envmap, texCoord) * vec4(vec3(diffuse * 0.6 + specular * 0.4), 1.0);
+	fragColor = pow(texture(envmap, texCoord) * vec4(vec3(diffuse * 0.6 + specular * 0.4), 1.0), vec4(1.0/2.2));
 }

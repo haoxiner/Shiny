@@ -34,7 +34,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 
     // Shader Program
     shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
-
+    //skyBoxShaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/SkyBox.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/SkyBox.frag.glsl"));
     // GPU Resource
     constantBufferList_.resize(NUM_OF_CONSTANT_BUFFER);
     glCreateBuffers(constantBufferList_.size(), constantBufferList_.data());
@@ -47,7 +47,13 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     for (int i = 0; i < constantBufferList_.size(); i++) {
         glBindBufferBase(GL_UNIFORM_BUFFER, i, constantBufferList_[i]);
     }
-
+    
+    glCreateSamplers(1, &samplerID_);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindSampler(0, samplerID_);
     
     unsigned int w(0), h(0);
     FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../envmap.exr");
@@ -57,15 +63,10 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     h = FreeImage_GetHeight(dib);
     auto bits = FreeImage_GetBits(dib);
     glCreateTextures(GL_TEXTURE_2D, 1, &textureID_);
-    glTextureStorage2D(textureID_, 1, GL_RGB32F, w, h);
+    glTextureStorage2D(textureID_, 1, GL_RGB16F, w, h);
     glTextureSubImage2D(textureID_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
     FreeImage_Unload(dib);
-    glCreateSamplers(1, &samplerID_);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindSampler(0, samplerID_);
     glBindTextureUnit(0, textureID_);
-    
     return true;
 }
 
@@ -76,20 +77,21 @@ void Shiny::Game::Update(float deltaTime)
 
 void Shiny::Game::Render()
 {
+    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 40.0f));
+    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 40.0f));
+
+    auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
+    perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
+    perFrameBuffer->worldToView = Matrix4x4(1.0f);
+    glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 40.0f));
-        auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 40.0f));
         Quaternion quat(0.0f, 0.0f, sinTheta, cosTheta);
         perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,sinTheta * 0.8f - 0.9f)) * QuaternionToMatrix(quat);
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
-
-        auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-        perFrameBuffer->worldToView = Matrix4x4(1.0f);
-        glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
         mesh.Render();
     }
 }

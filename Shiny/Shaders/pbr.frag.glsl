@@ -15,7 +15,7 @@ layout(binding = 0) uniform sampler2D envmap;
 vec4 textureLL(sampler2D ll, vec3 d)
 {
 	float phi = acos(-d.y);
-	float theta = atan(-1.0 * d.x, d.z) + PI;
+	float theta = atan(1.0 * d.x, d.z) + PI;
 	vec2 uv = vec2(theta / TWO_PI, phi / PI);
 	return texture(ll, uv);
 }
@@ -34,6 +34,6 @@ void main()
 
 	vec3 d = normalize(reflect(-omegaO, n));
 	vec2 ll = vec2(atan(d.x, d.z) / (2*3.141592654), acos(d.y) / 3.141592654);
-	fragColor = pow(/*textureLL(envmap, d) * */vec4(vec3(diffuse * 0.6 + specular * 0.4), 1.0), vec4(1.0/2.2));
+	fragColor = pow(textureLL(envmap, d)/* * vec4(vec3(diffuse * 0.6 + specular * 0.4), 1.0)*/, vec4(1.0/2.2));
 	//fragColor = vec4(n * 0.5 + vec3(0.5), 1.0);
 }

@@ -22,6 +22,9 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{b47ededa-37e8-4a9e-97d3-5b633645673c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{0c7f61cb-0fec-4828-9baa-1100414baa77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MathUtil.h">
@@ -87,6 +90,9 @@
     <ClInclude Include="SkyBox.h">
       <Filter>Game</Filter>
     </ClInclude>
+    <ClInclude Include="TinyObjLoader.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -133,6 +139,9 @@
     </ClCompile>
     <ClCompile Include="SkyBox.cpp">
       <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="TinyObjLoader.cpp">
+      <Filter>Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

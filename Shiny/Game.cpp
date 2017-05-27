@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "ResourceManager.h"
 #include "FreeImage.h"
+#include "TinyObjLoader.h"
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -11,6 +12,8 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     renderingSystem_.DisableCullFace();
     renderingSystem_.SetViewport(0, 0, xResolution, yResolution);
     glClearColor(0.0, 0.0, 0.0, 1.0);
+
+    
 
     // Load Meshes
     std::vector<short> positions = {
@@ -25,12 +28,20 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(0.0f),
         MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(0.0f)
     };
+    std::vector<float> fnormals = {
+        0.0f, 0.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f
+    };
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    mesh.LoadVertexAttribute(0, 4, true, positions);
-    mesh.LoadVertexAttribute(1, 4, true, normals);
-    mesh.LoadIndices(indices);
+    ResourceManager::LoadObjToMesh("../../cube.obj", mesh);
+    //mesh.LoadVertexAttribute(0, 4, true, positions);
+    //mesh.LoadVertexAttribute(1, 4, true, normals);
+    //mesh.LoadVertexAttribute(1, 4, fnormals);
+    //mesh.LoadIndices(indices);
 
     // Shader Program
     shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
@@ -39,7 +50,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     constantBufferList_.resize(NUM_OF_CONSTANT_BUFFER);
     glCreateBuffers(constantBufferList_.size(), constantBufferList_.data());
     StaticConstantBuffer staticConstantBuffer;
-    staticConstantBuffer.viewToProjection = MakePerspectiveProjectionMatrix(65.0f, static_cast<float>(xResolution) / yResolution, 0.001f, 1000.0f);
+    staticConstantBuffer.viewToProjection = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution) / yResolution, 0.001f, 1000.0f);
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
     glNamedBufferStorage(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], sizeof(PerObjectConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
@@ -77,8 +88,8 @@ void Shiny::Game::Update(float deltaTime)
 
 void Shiny::Game::Render()
 {
-    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 40.0f));
-    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 40.0f));
+    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 10.0f));
+    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 10.0f));
 
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
@@ -89,8 +100,8 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        Quaternion quat(0.0f, 0.0f, sinTheta, cosTheta);
-        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,sinTheta * 0.8f - 0.9f)) * QuaternionToMatrix(quat);
+        Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
+        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,-3.0f)) * QuaternionToMatrix(Normalize(quat));
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
         mesh.Render();
     }

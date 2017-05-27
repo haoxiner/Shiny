@@ -2,6 +2,7 @@
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
+#include <algorithm>
 
 namespace Shiny
 {
@@ -14,8 +15,8 @@ constexpr float INV_PI = 1.0f / PI;
 constexpr float INV_TWO_PI = 1.0f / TWO_PI;
 
 /*
-* Wrap an angle to [-pi, pi]
-* Angle must be close to [-pi, pi], otherwise the performance will be low
+    Wrap an angle to [-pi, pi]
+    Angle must be close to [-pi, pi], otherwise the performance will be low
 */
 inline float WrapAngle(float angle)
 {
@@ -31,7 +32,7 @@ inline float WrapAngle(float angle)
 }
 
 /*
-* degree to radians
+    degree to radians
 */
 inline float DegreesToRadians(float degrees)
 {
@@ -39,13 +40,13 @@ inline float DegreesToRadians(float degrees)
 }
 
 /*
-* map float of [-1.0, 1.0] to short
+    map float of [-1.0, 1.0] to short
 */
 inline short MapToShort(float value)
 {
     constexpr float mapToPositive = 32767.0f;
-    constexpr float mapToNegative = 32768.0f;
-    return static_cast<short>((value >= 0 ? mapToPositive * value : mapToNegative * value) + 0.5f);
+    constexpr float mapToNegative = -32768.0f;
+    return static_cast<short>((value >= 0 ? mapToPositive * value + 0.5f : -(mapToNegative * value + 0.5f)));
 }
 
 using Float2 = glm::vec2;
@@ -55,7 +56,14 @@ using Quaternion = Float4;
 using Matrix4x4 = glm::mat4;
 
 /*
-* Make ViewToProjection Transform
+    normalize
+*/
+inline Quaternion Normalize(const Quaternion& quaternion)
+{
+    return Quaternion(glm::normalize(quaternion));
+}
+/*
+    Make ViewToProjection Transform
 */
 inline Matrix4x4 MakePerspectiveProjectionMatrix(float verticalFov, float aspect, float zNear, float zFar)
 {
@@ -63,7 +71,7 @@ inline Matrix4x4 MakePerspectiveProjectionMatrix(float verticalFov, float aspect
 }
 
 /*
-* Quaternion To Matrix4x4
+    Quaternion To Matrix4x4
 */
 inline Matrix4x4 QuaternionToMatrix(const Quaternion& quaternion)
 {
@@ -83,7 +91,7 @@ inline Matrix4x4 QuaternionToMatrix(const Quaternion& quaternion)
 }
 
 /*
-* Translate By XYZ
+    Translate By XYZ
 */
 inline Matrix4x4 MakeTranslationMatrix(float x, float y, float z)
 {
@@ -93,7 +101,7 @@ inline Matrix4x4 MakeTranslationMatrix(float x, float y, float z)
                      x, y, z, 1.0f);
 }
 /*
-* Translate By Vector3f
+    Translate By Vector3f
 */
 inline Matrix4x4 MakeTranslationMatrix(const Float3& vector3f)
 {

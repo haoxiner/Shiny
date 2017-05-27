@@ -160,6 +160,7 @@
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="SkyBox.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TinyObjLoader.h" />
     <ClInclude Include="UniformBlock.h" />
     <ClInclude Include="UniformBlockDescription.h" />
     <ClInclude Include="VertexAttributeDescription.h" />
@@ -177,6 +178,7 @@
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="Shiny.cpp" />
     <ClCompile Include="SkyBox.cpp" />
+    <ClCompile Include="TinyObjLoader.cpp" />
     <ClCompile Include="UniformBlock.cpp" />
     <ClCompile Include="UniformBlockDescription.cpp" />
     <ClCompile Include="VertexAttributeDescription.cpp" />

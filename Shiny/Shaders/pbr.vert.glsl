@@ -23,7 +23,7 @@ void main()
 	position = (modelToWorld * vec4(vertexAttribute0.xyz, 1.0)).xyz;
 	vec4 positionInViewSpace = worldToView * vec4(position, 1.0);
 	
-	viewDirection = normalize(vec3(0.0) - positionInViewSpace.xyz);
+	viewDirection = normalize(vec3(0.0) - position);
 	normal = normalize(modelToWorld * vec4(vertexAttribute1.xyz, 0.0)).xyz;
 	texCoord = vec2(vertexAttribute0.w, vertexAttribute1.w);
 

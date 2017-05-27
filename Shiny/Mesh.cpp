@@ -64,7 +64,7 @@ void Shiny::Mesh::LoadVertexAttribute(int index, int numOfChannel, const std::ve
     glEnableVertexArrayAttrib(vao_, index);
     glVertexArrayVertexBuffer(vao_, index, vboList_[index], 0, numOfChannel * sizeof(data[0]));
     glVertexArrayAttribFormat(vao_, index, numOfChannel, GL_FLOAT, GL_FALSE, 0);
-    glVertexArrayAttribBinding(vao_, index, 0);
+    glVertexArrayAttribBinding(vao_, index, index);
 }
 
 void Shiny::Mesh::LoadIndices(const std::vector<unsigned short>& indices)

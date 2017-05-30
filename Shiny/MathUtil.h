@@ -107,4 +107,15 @@ inline Matrix4x4 MakeTranslationMatrix(const Float3& vector3f)
 {
     return MakeTranslationMatrix(vector3f.x, vector3f.y, vector3f.z);
 }
+
+/*
+    Scale By XYZ
+*/
+inline Matrix4x4 MakeScaleMatrix(float x, float y, float z)
+{
+    return Matrix4x4(x, 0.0f, 0.0f, 0.0f,
+                     0.0f, y, 0.0f, 0.0f,
+                     0.0f, 0.0f, z, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f);
+}
 }

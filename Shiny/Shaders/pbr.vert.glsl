@@ -2,7 +2,7 @@
 layout(location = 0) in vec4 vertexAttribute0;
 layout(location = 1) in vec4 vertexAttribute1;
 out vec3 position;
-out vec3 viewDirection;
+// out vec3 viewDirection;
 out vec3 normal;
 out vec2 texCoord;
 layout(binding = 0, std140) uniform StaticConstantBuffer
@@ -23,7 +23,7 @@ void main()
 	position = (modelToWorld * vec4(vertexAttribute0.xyz, 1.0)).xyz;
 	vec4 positionInViewSpace = worldToView * vec4(position, 1.0);
 	
-	viewDirection = normalize(vec3(0.0) - position);
+	// viewDirection = normalize(vec3(0.0) - position);
 	normal = normalize(modelToWorld * vec4(vertexAttribute1.xyz, 0.0)).xyz;
 	texCoord = vec2(vertexAttribute0.w, vertexAttribute1.w);
 

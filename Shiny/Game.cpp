@@ -37,7 +37,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../cube.obj", mesh);
+    ResourceManager::LoadObjToMesh("../../sphere.obj", mesh);
     //mesh.LoadVertexAttribute(0, 4, true, positions);
     //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadVertexAttribute(1, 4, fnormals);
@@ -62,22 +62,55 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glCreateSamplers(1, &samplerID_);
     glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    //glSamplerParameteri(samplerID_, GL_TEXTURE_MAX_LOD, 3);
     glBindSampler(0, samplerID_);
+    glBindSampler(1, samplerID_);
+
+    
     
     unsigned int w(0), h(0);
-    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../envmap.exr");
+    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../uffizi.exr");
     auto colorType = FreeImage_GetColorType(dib);
     auto bpp = FreeImage_GetBPP(dib);
     w = FreeImage_GetWidth(dib);
     h = FreeImage_GetHeight(dib);
+    std::cerr << w << "," << h << std::endl;
     auto bits = FreeImage_GetBits(dib);
     glCreateTextures(GL_TEXTURE_2D, 1, &textureID_);
     glTextureStorage2D(textureID_, 1, GL_RGB16F, w, h);
     glTextureSubImage2D(textureID_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
     FreeImage_Unload(dib);
+    glGenerateTextureMipmap(textureID_);
     glBindTextureUnit(0, textureID_);
+
+    // cubemap
+    //{
+    //    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    //    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &cubemapID_);
+    //    glTextureStorage2D(cubemapID_, 1, GL_RGB16F, 1024, 1024);
+    //    std::string arr[] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
+    //    for (int i = 0; i < 6; i++) {
+    //        auto dib = FreeImage_Load(FIF_EXR, ("../../uffizi/uffizi-" + arr[i] + ".exr").c_str());
+    //        if (arr[i] == "NY") {
+    //            
+    //        } else {
+    //            
+    //        }
+    //        FreeImage_FlipHorizontal(dib);
+    //        FreeImage_FlipVertical(dib);
+
+    //        auto bits = FreeImage_GetBits(dib);
+    //        w = FreeImage_GetWidth(dib);
+    //        h = FreeImage_GetHeight(dib);
+    //        std::cerr << w << "," << h << std::endl;
+    //        glTextureSubImage3D(cubemapID_, 0, 0, 0, i, 1024, 1024, 1, GL_RGB, GL_FLOAT, bits);
+    //        FreeImage_Unload(dib);
+    //    }
+    //    glBindTextureUnit(1, cubemapID_);
+    //}
     return true;
 }
 
@@ -88,20 +121,20 @@ void Shiny::Game::Update(float deltaTime)
 
 void Shiny::Game::Render()
 {
+    //testFloat_ = 60.0f;
     auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 10.0f));
     auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 10.0f));
-
+    Quaternion quat(0.0f, sinTheta, sinTheta, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = Matrix4x4(1.0f);
+    perFrameBuffer->worldToView = QuaternionToMatrix(Normalize(quat));
     glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
-        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f,-3.0f)) * QuaternionToMatrix(Normalize(quat));
+        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f, -0.0f)) * /*QuaternionToMatrix(Normalize(quat)) **/ MakeScaleMatrix(100.0f, 100.0f, 100.0f);
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
         mesh.Render();
     }

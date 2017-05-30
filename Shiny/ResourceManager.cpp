@@ -24,7 +24,7 @@ bool Shiny::ResourceManager::LoadObjToMesh(const std::string& fileName, Mesh& me
     if (!ret) {
         return false;
     }
-    std::vector<short> vertexAttribute0;
+    std::vector<float> vertexAttribute0;
     std::vector<float> vertexAttribute1;
     std::vector<unsigned int> indices;
     for (size_t s = 0; s < 1; s++) {
@@ -43,11 +43,11 @@ bool Shiny::ResourceManager::LoadObjToMesh(const std::string& fileName, Mesh& me
                 auto ty = attrib.texcoords[2 * idx.texcoord_index + 1];
 
                 indices.push_back(vertexAttribute0.size() / 4);
-                vertexAttribute0.push_back(MapToShort(vx));
-                vertexAttribute0.push_back(MapToShort(vy));
-                vertexAttribute0.push_back(MapToShort(vz));
-                vertexAttribute0.push_back(MapToShort(tx));
-                std::cerr << nx << "," << ny << "," << nz << std::endl;
+                vertexAttribute0.push_back((vx));
+                vertexAttribute0.push_back((vy));
+                vertexAttribute0.push_back((vz));
+                vertexAttribute0.push_back((tx));
+
                 vertexAttribute1.push_back((nx));
                 vertexAttribute1.push_back((ny));
                 vertexAttribute1.push_back((nz));
@@ -58,7 +58,7 @@ bool Shiny::ResourceManager::LoadObjToMesh(const std::string& fileName, Mesh& me
     }
     std::cerr << vertexAttribute0.size()/4 << std::endl;
     mesh.LoadIndices(indices);
-    mesh.LoadVertexAttribute(0, 4, true, vertexAttribute0);
+    mesh.LoadVertexAttribute(0, 4, vertexAttribute0);
     mesh.LoadVertexAttribute(1, 4, vertexAttribute1);
     return true;
 }

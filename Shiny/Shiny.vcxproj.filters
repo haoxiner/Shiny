@@ -160,5 +160,8 @@
     <None Include="Shaders\SkyBox.vert.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\PreComputation.comp.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

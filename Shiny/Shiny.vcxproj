@@ -187,6 +187,7 @@
     <None Include="Shaders\LightCulling.comp.glsl" />
     <None Include="Shaders\PBR.frag.glsl" />
     <None Include="Shaders\PBR.vert.glsl" />
+    <None Include="Shaders\PreComputation.comp.glsl" />
     <None Include="Shaders\SkyBox.frag.glsl" />
     <None Include="Shaders\SkyBox.vert.glsl" />
   </ItemGroup>

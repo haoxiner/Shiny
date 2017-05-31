@@ -37,11 +37,11 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../sphere.obj", mesh);
-    //mesh.LoadVertexAttribute(0, 4, true, positions);
-    //mesh.LoadVertexAttribute(1, 4, true, normals);
+    //ResourceManager::LoadObjToMesh("../../cube.obj", mesh);
+    mesh.LoadVertexAttribute(0, 4, true, positions);
+    mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadVertexAttribute(1, 4, fnormals);
-    //mesh.LoadIndices(indices);
+    mesh.LoadIndices(indices);
 
     // Shader Program
     shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
@@ -124,17 +124,17 @@ void Shiny::Game::Render()
     //testFloat_ = 60.0f;
     auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 10.0f));
     auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 10.0f));
-    Quaternion quat(0.0f, sinTheta, sinTheta, cosTheta);
+    Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = QuaternionToMatrix(Normalize(quat));
+    perFrameBuffer->worldToView = Matrix4x4(1.0f);
     glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f, -0.0f)) * /*QuaternionToMatrix(Normalize(quat)) **/ MakeScaleMatrix(100.0f, 100.0f, 100.0f);
+        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f, -2.0f)) * QuaternionToMatrix(Normalize(quat));
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
         mesh.Render();
     }

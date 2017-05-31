@@ -3,10 +3,10 @@
 #define INV_PI (1.0/PI)
 const int sampleCount = 1024;
 
-layout (binding = 0, std140) uniform SamplesBuffer
-{
-	vec4 samples[sampleCount / 2];
-};
+// layout (binding = 0, std140) uniform SamplesBuffer
+// {
+// 	vec4 samples[sampleCount / 2];
+// };
 
 layout (binding = 0) uniform sampler2D inputEnvmap;
 layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
@@ -17,35 +17,32 @@ vec4 SamplePanorama(sampler2D panorama, vec3 direction)
 	return texture(panorama, uv);
 }
 
+vec3 texCoordToDirection(vec2 texCoord)
+{
+	float u = texCoord.s;
+	float v = texCoord.t;
+	float theta = v * PI;
+	float phi = (2 * u - 1) * PI;
+	return vec3(sin(theta) * sin(phi), -cos(theta), -sin(theta) * cos(phi));
+}
+
 float saturate(float value)
 {
 	return clamp(value, 0.0, 1.0);
 }
 
-vec2 hammersley(uint originalSample)
+vec2 hammersley(uint i, uint N)
 {
-	uint revertSample;
-	const float g_m = 10.0;
-	const float u_binaryFractionFactor = 1.0 / (sampleCount - 1.0);
-
-	// Revert bits by swapping blockwise. Lower bits are moved up and higher bits down.
-	revertSample = (originalSample << 16u) | (originalSample >> 16u);
-	revertSample = ((revertSample & 0x00ff00ffu) << 8u) | ((revertSample & 0xff00ff00u) >> 8u);
-	revertSample = ((revertSample & 0x0f0f0f0fu) << 4u) | ((revertSample & 0xf0f0f0f0u) >> 4u);
-	revertSample = ((revertSample & 0x33333333u) << 2u) | ((revertSample & 0xccccccccu) >> 2u);
-	revertSample = ((revertSample & 0x55555555u) << 1u) | ((revertSample & 0xaaaaaaaau) >> 1u);
-
-	// Shift back, as only m bits are used.
-	revertSample = revertSample >> (32 - u_m);
-
-	return vec2(float(revertSample) * u_binaryFractionFactor, float(originalSample) * u_binaryFractionFactor);
+    float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
+    return vec2(float(i) / float(N), ri);
 }
 
 vec2 getSample(int i, int total)
 {
-	int index = i / 2;
-	int offset = int(mod(i, int(2)));
-	return offset == 0 ? samples[index].xy : samples[index].zw;
+	// int index = i / 2;
+	// int offset = int(mod(i, int(2)));
+	// return offset == 0 ? samples[index].xy : samples[index].zw;
+	return hammersley(uint(i), uint(total));
 }
 
 vec3 F_Schlick(in vec3 f0, in float f90, in float u)
@@ -218,12 +215,17 @@ vec4 integrateDiffuseCube(in vec3 N)
 		if (NdotL >0)
 			accBrdf += SamplePanorama(inputEnvmap, L).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
 	}
-	return vec4(accBrdf * (1.0f / sampleCount), 1.0f);
+	return vec4(accBrdf * (1.0 / sampleCount), 1.0);
 }
 
 layout(local_size_x = 1, local_size_y = 1) in;
 void main()
 {
+	vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / vec2(2400.0, 1200.0);
+	vec3 d = texCoordToDirection(texCoord);
+	vec4 diffuse = integrateDiffuseCube(d);
+	// imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
+	// 	texelFetch(inputEnvmap, ivec2(gl_GlobalInvocationID.xy), 0));
 	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
-		texelFetch(inputEnvmap, ivec2(gl_GlobalInvocationID.xy), 0));
+		diffuse);
 }

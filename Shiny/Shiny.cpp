@@ -62,6 +62,15 @@ int TestComputShader()
     glTextureSubImage2D(textureID_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
     FreeImage_Unload(dib);
     glBindTextureUnit(0, textureID_);
+    GLuint samplerID_;
+    glCreateSamplers(1, &samplerID_);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    //glSamplerParameteri(samplerID_, GL_TEXTURE_MAX_LOD, 3);
+    glBindSampler(0, samplerID_);
 
     //auto w = 512, h = 512;
     GLuint outputTextureID;
@@ -78,7 +87,7 @@ int TestComputShader()
     //int initData[2] = { 0,0 };
     //glNamedBufferStorage(buffer, sizeof(int) * 2, &initData, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
     //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
-
+    std::cerr << "before" << std::endl;
     glDispatchCompute(w, h, 1);
     std::cerr << "output" << std::endl;
     auto texSize = sizeof(float) * 3 * w * h;
@@ -86,7 +95,7 @@ int TestComputShader()
     auto pixels = FreeImage_GetBits(bitmap);
     //new BYTE[bufSize];
     std::cerr << (pixels ? 1 : 0) << std::endl;
-
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glGetTextureImage(outputTextureID, 0, GL_RGB, GL_FLOAT, texSize, pixels);
     
     auto result = FreeImage_Save(FIF_EXR, bitmap, "../../output.exr", EXR_DEFAULT);

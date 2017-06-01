@@ -5,6 +5,7 @@
 #include "ShaderProgram.h"
 #include "Game.h"
 #include "ResourceManager.h"
+#include "MathUtil.h"
 #include "FreeImage.h"
 #include <fstream>
 #include <iostream>
@@ -14,7 +15,7 @@ int TestDisplay()
     constexpr int xResolution = 800;
     constexpr int yResolution = 600;
     Shiny::Display display;
-    if (!display.Startup(xResolution, yResolution)) {
+    if (!display.Startup(xResolution, yResolution, true)) {
         return 1;
     }
     // input device
@@ -39,14 +40,29 @@ int TestDisplay()
     }
     return 0;
 }
+
+struct InputBlock
+{
+    Shiny::Float4 inputArg0;
+};
+void GPUwait()
+{
+    GLsync syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    GLenum ret = glClientWaitSync(syncObject, GL_SYNC_FLUSH_COMMANDS_BIT, 1000 * 1000 * 10000);
+    if (/*ret == GL_WAIT_FAILED || */ret == GL_TIMEOUT_EXPIRED)
+        std::cerr << ("glClientWaitSync failed./n") << std::endl;
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    glDeleteSync(syncObject);
+}
 int TestComputShader()
 {
     constexpr int xResolution = 800;
     constexpr int yResolution = 600;
     Shiny::Display display;
-    if (!display.Startup(xResolution, yResolution)) {
+    if (!display.Startup(xResolution, yResolution, false)) {
         return 1;
     }
+    
 
 
     GLuint textureID_;
@@ -72,12 +88,22 @@ int TestComputShader()
     //glSamplerParameteri(samplerID_, GL_TEXTURE_MAX_LOD, 3);
     glBindSampler(0, samplerID_);
 
-    //auto w = 512, h = 512;
+    w = 2048;
+    h = 1024;
+    auto texSize = sizeof(float) * 3 * w * h;
+    auto bitmap = FreeImage_AllocateT(FIT_RGBF, w, h);
+    auto pixels = FreeImage_GetBits(bitmap);
+
     GLuint outputTextureID;
     glCreateTextures(GL_TEXTURE_2D, 1, &outputTextureID);
     glTextureStorage2D(outputTextureID, 1, GL_RGBA32F, w, h);
-    glBindImageTexture(0, outputTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindImageTexture(0, outputTextureID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
+    GLuint inputBuffer;
+    glCreateBuffers(1, &inputBuffer);
+    InputBlock inputBlock = { Shiny::Float4(w, h, 0.0, 0.0) };
+    glNamedBufferStorage(inputBuffer, sizeof(InputBlock), &inputBlock, 0);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, inputBuffer);
 
     Shiny::ShaderProgram computeShaderProgram;
     computeShaderProgram.Startup(Shiny::ResourceManager::ReadFileToString("./Shaders/PreComputation.comp.glsl"));
@@ -87,17 +113,18 @@ int TestComputShader()
     //int initData[2] = { 0,0 };
     //glNamedBufferStorage(buffer, sizeof(int) * 2, &initData, GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
     //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
-    std::cerr << "before" << std::endl;
-    glDispatchCompute(w, h, 1);
-    std::cerr << "output" << std::endl;
-    auto texSize = sizeof(float) * 3 * w * h;
-    auto bitmap = FreeImage_AllocateT(FIT_RGBF,w, h);
-    auto pixels = FreeImage_GetBits(bitmap);
-    //new BYTE[bufSize];
-    std::cerr << (pixels ? 1 : 0) << std::endl;
+    std::cerr << "before " << glGetError() << std::endl;
+    glDispatchCompute(w/32, h/32, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    glGetTextureImage(outputTextureID, 0, GL_RGB, GL_FLOAT, texSize, pixels);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    //GPUwait();
+    //std::cerr << "afterB " << glGetError() << std::endl;
+
+    //std::cerr << "output" << std::endl;
     
+    glGetTextureImage(outputTextureID, 0, GL_RGB, GL_FLOAT, texSize, pixels);
+
+    std::cerr << "afterC " << glGetError() << std::endl;
     auto result = FreeImage_Save(FIF_EXR, bitmap, "../../output.exr", EXR_DEFAULT);
     std::cerr << result << std::endl;
     display.Shutdown();

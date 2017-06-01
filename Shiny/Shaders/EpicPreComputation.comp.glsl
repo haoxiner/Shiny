@@ -1,0 +1,90 @@
+#version 450 core
+#define PI 3.1415926535897932384626433832795
+#define INV_PI (1.0/PI)
+const int sampleCount = 1024;
+
+// layout (binding = 0, std140) uniform SamplesBuffer
+// {
+// 	vec4 samples[sampleCount / 2];
+// };
+
+layout (binding = 0) uniform sampler2D inputEnvmap;
+layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
+
+vec4 SamplePanorama(sampler2D panorama, vec3 direction)
+{
+	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
+	return texture(panorama, uv);
+}
+
+vec3 TexCoordToDirection(vec2 texCoord)
+{
+	float u = texCoord.s;
+	float v = texCoord.t;
+	float theta = v * PI;
+	float phi = (2 * u - 1) * PI;
+	return vec3(sin(theta) * sin(phi), -cos(theta), -sin(theta) * cos(phi));
+}
+
+float Saturate(float value)
+{
+	return clamp(value, 0.0, 1.0);
+}
+
+vec2 Hammersley(uint i, uint N)
+{
+    float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
+    return vec2(float(i) / float(N), ri);
+}
+
+vec3 ImportanceSampleGGX( vec2 Xi, float Roughness, vec3 N )
+{
+	float a = Roughness * Roughness;
+	float Phi = 2 * PI * Xi.x;
+	float CosTheta = sqrt( (1 - Xi.y) / ( 1 + (a*a - 1) * Xi.y ) );
+	float SinTheta = sqrt( 1 - CosTheta * CosTheta );
+	vec3 H;
+	H.x = SinTheta * cos( Phi );
+	H.y = SinTheta * sin( Phi );
+	H.z = CosTheta;
+	vec3 UpVector = abs(N.z) < 0.999 ? vec3(0,0,1) : vec3(1,0,0);
+	vec3 TangentX = normalize( cross( UpVector, N ) );
+	vec3 TangentY = cross( N, TangentX );
+	// Tangent to world space
+	return TangentX * H.x + TangentY * H.y + N * H.z;
+}
+vec3 PrefilterEnvMap( float Roughness, vec3 R )
+{
+	vec3 N = R;
+	vec3 V = R;
+	vec3 PrefilteredColor = vec3(0);
+	const uint NumSamples = 1024;
+	float TotalWeight = 0.0;
+	for( uint i = 0; i < NumSamples; i++ )
+	{
+		vec2 Xi = Hammersley( i, NumSamples );
+		vec3 H = ImportanceSampleGGX( Xi, Roughness, N );
+		vec3 L = 2 * dot( V, H ) * H - V;
+		float NoL = Saturate( dot( N, L ) );
+		if( NoL > 0 )
+		{
+			PrefilteredColor += SamplePanorama(inputEnvmap, L).rgb * NoL;
+			TotalWeight += NoL;
+		}
+	}
+	return PrefilteredColor / TotalWeight;
+}
+
+layout(local_size_x = 32, local_size_y = 32) in;
+void main()
+{
+	vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / vec2(512.0, 256.0);
+	vec3 d = TexCoordToDirection(texCoord);
+	// vec4 diffuse = IntegrateDiffuseCube(d);
+	vec3 pixel = PrefilterEnvMap(1.0, d);
+	
+	// imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
+	// 	texelFetch(inputEnvmap, ivec2(gl_GlobalInvocationID.xy), 0));
+	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
+		vec4(pixel, 1.0));
+}

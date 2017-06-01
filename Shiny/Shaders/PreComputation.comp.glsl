@@ -1,13 +1,11 @@
 #version 450 core
 #define PI 3.1415926535897932384626433832795
 #define INV_PI (1.0/PI)
-const int sampleCount = 1024;
-
-// layout (binding = 0, std140) uniform SamplesBuffer
-// {
-// 	vec4 samples[sampleCount / 2];
-// };
-
+const int sampleCount = 1024 * 16;
+layout (binding = 0, std140) uniform InputBuffer
+{
+	vec4 inputArg0;
+};
 layout (binding = 0) uniform sampler2D inputEnvmap;
 layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
 
@@ -17,7 +15,7 @@ vec4 SamplePanorama(sampler2D panorama, vec3 direction)
 	return texture(panorama, uv);
 }
 
-vec3 texCoordToDirection(vec2 texCoord)
+vec3 TexCoordToDirection(vec2 texCoord)
 {
 	float u = texCoord.s;
 	float v = texCoord.t;
@@ -26,23 +24,20 @@ vec3 texCoordToDirection(vec2 texCoord)
 	return vec3(sin(theta) * sin(phi), -cos(theta), -sin(theta) * cos(phi));
 }
 
-float saturate(float value)
+float Saturate(float value)
 {
 	return clamp(value, 0.0, 1.0);
 }
 
-vec2 hammersley(uint i, uint N)
+vec2 Hammersley(uint i, uint N)
 {
     float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
     return vec2(float(i) / float(N), ri);
 }
 
-vec2 getSample(int i, int total)
+vec2 GetSample(int i, int total)
 {
-	// int index = i / 2;
-	// int offset = int(mod(i, int(2)));
-	// return offset == 0 ? samples[index].xy : samples[index].zw;
-	return hammersley(uint(i), uint(total));
+	return Hammersley(uint(i), uint(total));
 }
 
 vec3 F_Schlick(in vec3 f0, in float f90, in float u)
@@ -96,7 +91,7 @@ float Fr_DisneyDiffuse(
 	return lightScatter * viewScatter * energyFactor;
 }
 
-void importanceSampleCosDir(
+void ImportanceSampleCosDir(
 	in vec2 u,
 	in vec3 N,
 	out vec3 L,
@@ -122,7 +117,7 @@ struct Referential
 	vec3 tangentX;
 	vec3 tangentY;
 };
-Referential createReferential(vec3 N)
+Referential CreateReferential(vec3 N)
 {
 	Referential referential;
 	referential.upVector = abs(N.z) < 0.999 ? vec3(0,0,1) : vec3(1,0,0);
@@ -130,7 +125,7 @@ Referential createReferential(vec3 N)
 	referential.tangentY = cross( N, referential.tangentX );
 	return referential;
 }
-vec3 importanceSampleGGX( vec2 Xi, float Roughness, vec3 N, Referential referential )
+vec3 ImportanceSampleGGX( vec2 Xi, float Roughness, vec3 N, Referential referential )
 {
 	float a = Roughness * Roughness;
 	float Phi = 2 * PI * Xi.x;
@@ -143,40 +138,40 @@ vec3 importanceSampleGGX( vec2 Xi, float Roughness, vec3 N, Referential referent
 	// Tangent to world space
 	return referential.tangentX * H.x + referential.tangentY * H.y + N * H.z;
 }
-void importanceSampleGGX_G(
+void ImportanceSampleGGX_G(
 	in vec2 u, in vec3 V, in vec3 N,
 	in Referential referential, in float roughness,
 	out float NdotH, out float LdotH, out vec3 L, out float G)
 {
-	vec3 H = importanceSampleGGX(u, roughness, N, referential);
+	vec3 H = ImportanceSampleGGX(u, roughness, N, referential);
 	L = 2 * dot( V, H ) * H - V;
-	NdotH = saturate(dot(N, H));
-	LdotH = saturate(dot(L, H));
-	float NdotL = saturate(dot(N, L));
-	float NdotV = saturate(dot(N, V)); 
+	NdotH = Saturate(dot(N, H));
+	LdotH = Saturate(dot(L, H));
+	float NdotL = Saturate(dot(N, L));
+	float NdotV = Saturate(dot(N, V)); 
 	G = G_SmithGGXCorrelated(NdotL, NdotV, roughness);
 }
-vec4 integrateDFGOnly(
+vec4 IntegrateDFGOnly(
 	in vec3 V,
 	in vec3 N,
 	in float roughness)
 {
-	float NdotV = saturate(dot(N, V));
+	float NdotV = Saturate(dot(N, V));
 	vec4 acc = vec4(0.0);
 	float accWeight = 0.0;
 	// Compute pre-integration
-	Referential referential = createReferential(N);
+	Referential referential = CreateReferential(N);
 	for (int i=0; i<sampleCount; ++i)
 	{
-		vec2 u = getSample(i, sampleCount);
+		vec2 u = GetSample(i, sampleCount);
 		vec3 L = vec3(0);
 		float NdotH = 0;
 		float LdotH = 0;
 		float G = 0;
 		// See [Karis13] for implementation
-		importanceSampleGGX_G(u, V, N, referential , roughness , NdotH , LdotH , L, G);
+		ImportanceSampleGGX_G(u, V, N, referential , roughness , NdotH , LdotH , L, G);
 		// specular GGX DFG preIntegration
-		float NdotL = saturate(dot(N, L));
+		float NdotL = Saturate(dot(N, L));
 		if (NdotL >0 && G > 0.0)
 		{
 			float GVis = G * LdotH / (NdotH * NdotV);
@@ -189,11 +184,11 @@ vec4 integrateDFGOnly(
 		float pdf;
 		// The pdf is not use because it cancel with other terms
 		// (The 1/PI from diffuse BRDF and the NdotL from Lambert ’s law).
-		importanceSampleCosDir(u, N, L, NdotL , pdf);
+		ImportanceSampleCosDir(u, N, L, NdotL , pdf);
 		if (NdotL >0)
 		{
-			float LdotH = saturate(dot(L, normalize(V + L)));
-			float NdotV = saturate(dot(N, V));
+			float LdotH = Saturate(dot(L, normalize(V + L)));
+			float NdotV = Saturate(dot(N, V));
 			acc.z += Fr_DisneyDiffuse(NdotV , NdotL , LdotH , sqrt(roughness));
 		}
 		accWeight += 1.0;
@@ -201,31 +196,46 @@ vec4 integrateDFGOnly(
 	return acc * (1.0f / accWeight);
 }
 
-vec4 integrateDiffuseCube(in vec3 N)
+vec4 IntegrateDiffuseCube(in vec3 N)
 {
 	vec3 accBrdf = vec3(0);
 	for (int i=0; i<sampleCount; ++i)
 	{
-		vec2 eta = getSample(i, sampleCount);
+		vec2 eta = GetSample(i, sampleCount);
 		vec3 L;
 		float NdotL;
 		float pdf;
 		// see reference code in appendix
-		importanceSampleCosDir(eta, N, L, NdotL , pdf);
+		ImportanceSampleCosDir(eta, N, L, NdotL , pdf);
 		if (NdotL >0)
 			accBrdf += SamplePanorama(inputEnvmap, L).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
 	}
 	return vec4(accBrdf * (1.0 / sampleCount), 1.0);
 }
 
-layout(local_size_x = 1, local_size_y = 1) in;
+void OutputDiffuse()
+{
+	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy)) / inputArg0.xy;
+	vec3 d = TexCoordToDirection(texCoord);
+	vec4 diffuse = IntegrateDiffuseCube(d);
+	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy), diffuse);
+}
+
+void OutputDFG()
+{
+	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / inputArg0.xy;
+	float NoV = texCoord.x;
+	vec3 V;
+	V.x = sqrt( 1.0 - NoV * NoV ); // sin
+	V.y = 0;
+	V.z = NoV; // cos
+	vec4 dfg = IntegrateDFGOnly(vec3(0.0,0.0,1.0), V, texCoord.y);
+	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
+		dfg);
+}
+
+layout(local_size_x = 32, local_size_y = 32) in;
 void main()
 {
-	vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / vec2(2400.0, 1200.0);
-	vec3 d = texCoordToDirection(texCoord);
-	vec4 diffuse = integrateDiffuseCube(d);
-	// imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
-	// 	texelFetch(inputEnvmap, ivec2(gl_GlobalInvocationID.xy), 0));
-	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
-		diffuse);
+	OutputDiffuse();
 }

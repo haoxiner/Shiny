@@ -184,6 +184,7 @@
     <ClCompile Include="VertexAttributeDescription.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\EpicPreComputation.comp.glsl" />
     <None Include="Shaders\LightCulling.comp.glsl" />
     <None Include="Shaders\PBR.frag.glsl" />
     <None Include="Shaders\PBR.vert.glsl" />

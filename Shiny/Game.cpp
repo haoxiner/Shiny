@@ -37,11 +37,11 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    //ResourceManager::LoadObjToMesh("../../cube.obj", mesh);
-    mesh.LoadVertexAttribute(0, 4, true, positions);
-    mesh.LoadVertexAttribute(1, 4, true, normals);
+    ResourceManager::LoadObjToMesh("../../Resources/mitsuba.obj", mesh);
+    //mesh.LoadVertexAttribute(0, 4, true, positions);
+    //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadVertexAttribute(1, 4, fnormals);
-    mesh.LoadIndices(indices);
+    //mesh.LoadIndices(indices);
 
     // Shader Program
     shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
@@ -72,7 +72,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     
     
     unsigned int w(0), h(0);
-    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../uffizi.exr");
+    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../uffizi_diffuse.exr");
     auto colorType = FreeImage_GetColorType(dib);
     auto bpp = FreeImage_GetBPP(dib);
     w = FreeImage_GetWidth(dib);
@@ -83,8 +83,18 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glTextureStorage2D(textureID_, 1, GL_RGB16F, w, h);
     glTextureSubImage2D(textureID_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
     FreeImage_Unload(dib);
-    glGenerateTextureMipmap(textureID_);
     glBindTextureUnit(0, textureID_);
+
+    dib = FreeImage_Load(FIF_EXR, "../../dfg.exr");
+    w = FreeImage_GetWidth(dib);
+    h = FreeImage_GetHeight(dib);
+    std::cerr << w << "," << h << std::endl;
+    bits = FreeImage_GetBits(dib);
+    glCreateTextures(GL_TEXTURE_2D, 1, &dfgTexture_);
+    glTextureStorage2D(dfgTexture_, 1, GL_RGB16F, w, h);
+    glTextureSubImage2D(dfgTexture_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
+    FreeImage_Unload(dib);
+    glBindTextureUnit(1, dfgTexture_);
 
     // cubemap
     //{
@@ -121,7 +131,7 @@ void Shiny::Game::Update(float deltaTime)
 
 void Shiny::Game::Render()
 {
-    //testFloat_ = 60.0f;
+    //testFloat_ = 00.0f;
     auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 10.0f));
     auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 10.0f));
     Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
@@ -134,7 +144,7 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, 0.0f, -2.0f)) * QuaternionToMatrix(Normalize(quat));
+        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, -1.0f, -4.0f)) * QuaternionToMatrix(Normalize(quat));
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
         mesh.Render();
     }

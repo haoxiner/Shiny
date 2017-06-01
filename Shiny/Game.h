@@ -44,6 +44,7 @@ private:
     };
     std::vector<GLuint> constantBufferList_;
     GLuint textureID_;
+    GLuint dfgTexture_;
     GLuint samplerID_;
     GLuint cubemapID_;
     float testFloat_ = 0.0f;

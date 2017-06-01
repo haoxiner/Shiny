@@ -2,7 +2,7 @@
 #include "Platform.h"
 #include <iostream>
 
-bool Shiny::Display::Startup(int xResolution, int yResolution) {
+bool Shiny::Display::Startup(int xResolution, int yResolution, bool showWindow) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
         return false;
     }
@@ -18,7 +18,7 @@ bool Shiny::Display::Startup(int xResolution, int yResolution) {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
 
-    window_ = SDL_CreateWindow("Project Dragon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xResolution, yResolution, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    window_ = SDL_CreateWindow("Project Dragon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xResolution, yResolution, SDL_WINDOW_OPENGL | (showWindow ? SDL_WINDOW_SHOWN : SDL_WINDOW_HIDDEN));
     if (window_ == nullptr) {
         return false;
     }

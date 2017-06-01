@@ -6,7 +6,7 @@ namespace Shiny
 {
 class Display {
 public:
-    bool Startup(int xResolution, int yResolution);
+    bool Startup(int xResolution, int yResolution, bool showWindow = false);
     void Update();
     void Shutdown();
     bool Running();

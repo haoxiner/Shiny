@@ -12,7 +12,7 @@ layout(binding = 1, std140) uniform PerFrameConstantBuffer
 	vec4 data;
 	mat4 worldToView;
 };
-layout(binding = 0) uniform sampler2D envmap;
+layout(binding = 0) uniform sampler2D diffuseEnvmap;
 layout(binding = 1) uniform sampler2D dfgMap;
 layout(binding = 2) uniform sampler2D specularEnvmap;
 // layout(binding = 2) uniform samplerCube cubemap;
@@ -40,7 +40,7 @@ vec3 GetDiffuseDominantDir(vec3 N, vec3 V, float NdotV , float roughness)
 vec3 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float roughness)
 {
 	vec3 dominantN = GetDiffuseDominantDir(N, V, NdotV , roughness);
-	vec3 diffuseLighting = SamplePanorama(envmap, dominantN).xyz;
+	vec3 diffuseLighting = SamplePanorama(diffuseEnvmap, dominantN).xyz;
 	float diffF = texture(dfgMap, vec2(NdotV , roughness)).z;
 	return diffuseLighting * diffF;
 }
@@ -75,7 +75,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness)
 	// vec2 preDFG = DFG.SampleLevel(sampler , float2(NdotV , roughness), 0).xy;
 	vec2 preDFG = texture(dfgMap, vec2(NdotV, roughness)).xy;
 
-	float f0 = 1.0;
+	float f0 = 0.77;
 	float f90 = Saturate(50.0 * dot(f0 , 0.33));
 	// LD . ( f0.Gv.(1-Fc) + Gv.Fc.f90 )
 	return preLD * (f0 * preDFG.x + f90 * preDFG.y);
@@ -114,23 +114,19 @@ void main()
 	vec3 N = normalize(normal);
 	
 	// vec3 r = normalize(reflect(-L, n));
-	vec3 H = normalize(L + V);
+	// vec3 H = normalize(L + V);
 
-	float diffuse = max(0.0, dot(L, N));
-	float specular = pow(max(0.0, dot(N, H)), 1000.0);
+	// float diffuse = max(0.0, dot(L, N));
+	// float specular = pow(max(0.0, dot(N, H)), 1000.0);
 
 
-	vec3 rd = normalize(reflect(-V, N));
-	// vec2 ll = vec2(atan(d.x, d.z) / (2*3.141592654), acos(d.y) / 3.141592654);
-	//fragColor = pow(textureLL(envmap, d)/* * vec4(vec3(diffuse * 0.6 + specular * 0.4), 1.0)*/, vec4(1.0/2.2));
-	//fragColor = vec4(n * 0.5 + vec3(0.5), 1.0);
-	//fragColor = vec4(d * 0.5 + vec3(0.5), 1.0);
-
-	// vec2 ll = vec2(atan(rd.z, rd.x) + PI, acos(-rd.y)) / vec2(2.0 * PI, PI);
-	// fragColor = pow(SamplePanorama(envmap, N) * INV_PI, vec4(1.0/2.2));
-	float roughness = 0.1;
+	// vec3 rd = normalize(reflect(-V, N));
+	float oRoughness = 0.1;
+	float roughness = oRoughness * oRoughness;
 	fragColor.xyz = EvaluateIBLSpecular(N, V, dot(N, V), roughness) * 0.9 + 0.1 * INV_PI * EvaluateIBLDiffuse(N, V, dot(N, V), roughness);
-	fragColor = pow(fragColor * (vec4(212,175,55,255) / 255.0), vec4(1.0/1.0));
+	fragColor = pow(fragColor * (vec4(255) / 255.0), vec4(1.0/1.0));
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
+
+	// fragColor = SamplePanorama(specularEnvmap, reflect(-V, N));
 }

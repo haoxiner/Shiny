@@ -1,7 +1,7 @@
 #version 450 core
 #define PI 3.1415926535897932384626433832795
 #define INV_PI (1.0/PI)
-const int sampleCount = 1024 * 4;
+int sampleCount = 1024 * 4;
 layout (binding = 0, std140) uniform InputBuffer
 {
 	vec4 inputArg0;
@@ -315,5 +315,12 @@ void OutputSpecular()
 layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	OutputSpecular();
+	sampleCount = int(inputArg0.w);
+	if (inputArg0.z < 1.0) {
+		OutputDiffuse();
+	} else if (inputArg0.z < 2.0) {
+		OutputSpecular();
+	} else if (inputArg0.z < 3.0) {
+		OutputDFG();
+	}
 }

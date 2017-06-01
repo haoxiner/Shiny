@@ -37,7 +37,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/Models/mitsuba.obj", mesh);
+    ResourceManager::LoadObjToMesh("../../Resources/Model/sphere.obj", mesh);
     //mesh.LoadVertexAttribute(0, 4, true, positions);
     //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadVertexAttribute(1, 4, fnormals);
@@ -73,7 +73,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     
     
     unsigned int w(0), h(0);
-    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../uffizi_diffuse.exr");
+    FIBITMAP* dib = FreeImage_Load(FIF_EXR, "../../Resources/envmap/uffizi_diffuse.exr");
     auto colorType = FreeImage_GetColorType(dib);
     auto bpp = FreeImage_GetBPP(dib);
     w = FreeImage_GetWidth(dib);
@@ -86,7 +86,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     FreeImage_Unload(dib);
     glBindTextureUnit(0, textureID_);
 
-    dib = FreeImage_Load(FIF_EXR, "../../dfg.exr");
+    dib = FreeImage_Load(FIF_EXR, "../../Resources/dfg.exr");
     w = FreeImage_GetWidth(dib);
     h = FreeImage_GetHeight(dib);
     std::cerr << w << "," << h << std::endl;
@@ -97,7 +97,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     FreeImage_Unload(dib);
     glBindTextureUnit(1, dfgTexture_);
 
-    dib = FreeImage_Load(FIF_EXR, "../../uffizi_specular.exr");
+    dib = FreeImage_Load(FIF_EXR, "../../Resources/envmap/uffizi_specular.exr");
     w = FreeImage_GetWidth(dib);
     h = FreeImage_GetHeight(dib);
     std::cerr << w << "," << h << std::endl;
@@ -151,7 +151,7 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     for (auto&& mesh : meshes_) {
         auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, -1.0f, -4.0f)) * QuaternionToMatrix(Normalize(quat));
+        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, -1.0f, -100.0f)) * QuaternionToMatrix(Normalize(quat));
         glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
         mesh.Render();
     }

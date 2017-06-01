@@ -7,7 +7,10 @@ const int sampleCount = 1024;
 // {
 // 	vec4 samples[sampleCount / 2];
 // };
-
+layout (binding = 0, std140) uniform InputBuffer
+{
+	vec4 inputArg0;
+};
 layout (binding = 0) uniform sampler2D inputEnvmap;
 layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
 
@@ -58,7 +61,7 @@ vec3 PrefilterEnvMap( float Roughness, vec3 R )
 	vec3 N = R;
 	vec3 V = R;
 	vec3 PrefilteredColor = vec3(0);
-	const uint NumSamples = 1024;
+	const uint NumSamples = 1024 * 16;
 	float TotalWeight = 0.0;
 	for( uint i = 0; i < NumSamples; i++ )
 	{
@@ -72,16 +75,16 @@ vec3 PrefilterEnvMap( float Roughness, vec3 R )
 			TotalWeight += NoL;
 		}
 	}
-	return PrefilteredColor / TotalWeight;
+	return TotalWeight > 0.0 ? (PrefilteredColor / TotalWeight) : PrefilteredColor;
 }
 
 layout(local_size_x = 32, local_size_y = 32) in;
 void main()
 {
-	vec2 texCoord = vec2(gl_GlobalInvocationID.xy) / vec2(512.0, 256.0);
+	vec2 texCoord = (vec2(0.5) + vec2(gl_GlobalInvocationID.xy)) / inputArg0.xy;
 	vec3 d = TexCoordToDirection(texCoord);
 	// vec4 diffuse = IntegrateDiffuseCube(d);
-	vec3 pixel = PrefilterEnvMap(1.0, d);
+	vec3 pixel = PrefilterEnvMap(0.2, d);
 	
 	// imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy),
 	// 	texelFetch(inputEnvmap, ivec2(gl_GlobalInvocationID.xy), 0));

@@ -1,7 +1,7 @@
 #version 450 core
 #define PI 3.1415926535897932384626433832795
 #define INV_PI (1.0/PI)
-const int sampleCount = 1024 * 16;
+const int sampleCount = 1024 * 4;
 layout (binding = 0, std140) uniform InputBuffer
 {
 	vec4 inputArg0;
@@ -29,10 +29,20 @@ float Saturate(float value)
 	return clamp(value, 0.0, 1.0);
 }
 
+float radicalInverse_VdC(uint bits)
+{
+	bits = (bits << 16u) | (bits >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+}
+
 vec2 Hammersley(uint i, uint N)
 {
-    float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
-    return vec2(float(i) / float(N), ri);
+    // float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
+    return vec2(float(i) / float(N), radicalInverse_VdC(i));
 }
 
 vec2 GetSample(int i, int total)
@@ -212,10 +222,70 @@ vec4 IntegrateDiffuseCube(in vec3 N)
 	}
 	return vec4(accBrdf * (1.0 / sampleCount), 1.0);
 }
+void ImportanceSampleGGXDir(in vec2 Xi, in vec3 V, in vec3 N, in float Roughness, out vec3 H, out vec3 L)
+{
+	Referential referential = CreateReferential(N);
+	H = ImportanceSampleGGX(Xi, Roughness, N, referential);
+	L = 2 * dot( V, H ) * H - V;
+}
+float D_GGX_Divide_Pi(float roughness, float NdotH)
+{
+    return D_GGX(roughness, NdotH) / PI;
+}
+vec3 IntegrateCubeLDOnly(
+	in vec3 V,
+	in vec3 N,
+	in float roughness)
+{
+	vec3 accBrdf = vec3(0);
+	float accBrdfWeight = 0;
+	for (int i=0; i<sampleCount; ++i)
+	{
+		vec2 eta = GetSample(i, sampleCount);
+		vec3 L;
+		vec3 H;
+		ImportanceSampleGGXDir(eta, V, N, roughness , H, L);
+		float NdotL = dot(N,L);
+		if (NdotL >0)
+		{
+			// Use pre-filtered importance sampling (i.e use lower mipmap
+			// level for fetching sample with low probability in order
+			// to reduce the variance).
+			// (Reference: GPU Gem3)
+			//
+			// Since we pre-integrate the result for normal direction ,
+			// N == V and then NdotH == LdotH. This is why the BRDF pdf
+			// can be simplifed from:
+			// pdf = D_GGX_Divide_Pi(NdotH , roughness)*NdotH/(4*LdotH);
+			// to
+			// pdf = D_GGX_Divide_Pi(NdotH , roughness) / 4;
+			//
+			// The mipmap level is clamped to something lower than 8x8
+			// in order to avoid cubemap filtering issues
+			//
+			// - OmegaS: Solid angle associated to a sample
+			// - OmegaP: Solid angle associated to a pixel of the cubemap
+			float NdotH = Saturate(dot(N, H));
+			float LdotH = Saturate(dot(L, H));
+			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
+			float omegaS = 1.0 / (sampleCount * pdf);
+			float omegaP = 4.0 * PI / (inputArg0.x * inputArg0.y);
+			float mipCount = 1.0;
+			float mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, mipCount);
+			mipLevel = 0.0;
+			// vec4 Li = IBLCube.SampleLevel(IBLSampler , L, mipLevel);
+			vec4 Li = SamplePanorama(inputEnvmap, L);
+
+			accBrdf += Li.rgb * NdotL;
+			accBrdfWeight += NdotL;
+		}
+	}
+	return accBrdf * (1.0f / accBrdfWeight);
+}
 
 void OutputDiffuse()
 {
-	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy)) / inputArg0.xy;
+	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / inputArg0.xy;
 	vec3 d = TexCoordToDirection(texCoord);
 	vec4 diffuse = IntegrateDiffuseCube(d);
 	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy), diffuse);
@@ -234,8 +304,16 @@ void OutputDFG()
 		dfg);
 }
 
-layout(local_size_x = 32, local_size_y = 32) in;
+void OutputSpecular()
+{
+	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / inputArg0.xy;
+	vec3 d = TexCoordToDirection(texCoord);
+	vec3 specular = IntegrateCubeLDOnly(d, d, 0.1);
+	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy), vec4(specular, 1.0));
+}
+
+layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
-	OutputDiffuse();
+	OutputSpecular();
 }

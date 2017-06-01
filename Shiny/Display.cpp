@@ -15,8 +15,8 @@ bool Shiny::Display::Startup(int xResolution, int yResolution, bool showWindow) 
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
+    //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
 
     window_ = SDL_CreateWindow("Project Dragon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xResolution, yResolution, SDL_WINDOW_OPENGL | (showWindow ? SDL_WINDOW_SHOWN : SDL_WINDOW_HIDDEN));
     if (window_ == nullptr) {
@@ -36,9 +36,9 @@ bool Shiny::Display::Startup(int xResolution, int yResolution, bool showWindow) 
     glewInit();
     
     int a = 0, b = 0;
-    std::cerr << SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &a) << ": " << a << std::endl;
-    std::cerr << SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &b) << ": " << b << std::endl;
-    glEnable(GL_MULTISAMPLE);
+    //std::cerr << SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &a) << ": " << a << std::endl;
+    //std::cerr << SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &b) << ": " << b << std::endl;
+    //glEnable(GL_MULTISAMPLE);
     running_ = true;
     return true;
 }

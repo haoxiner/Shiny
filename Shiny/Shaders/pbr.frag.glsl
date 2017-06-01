@@ -14,7 +14,9 @@ layout(binding = 1, std140) uniform PerFrameConstantBuffer
 };
 layout(binding = 0) uniform sampler2D envmap;
 layout(binding = 1) uniform sampler2D dfgMap;
-
+layout(binding = 2) uniform sampler2D specularEnvmap;
+// layout(binding = 2) uniform samplerCube cubemap;
+const uint NumSamples = 1024;
 float Saturate(float value)
 {
 	return clamp(value, 0.0, 1.0);
@@ -35,41 +37,74 @@ vec3 GetDiffuseDominantDir(vec3 N, vec3 V, float NdotV , float roughness)
 	return mix(N, V, lerpFactor);
 }
 
-vec4 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float roughness)
+vec3 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float roughness)
 {
 	vec3 dominantN = GetDiffuseDominantDir(N, V, NdotV , roughness);
-	vec4 diffuseLighting = SamplePanorama(envmap, dominantN);
+	vec3 diffuseLighting = SamplePanorama(envmap, dominantN).xyz;
 	float diffF = texture(dfgMap, vec2(NdotV , roughness)).z;
 	return diffuseLighting * diffF;
 }
-
-vec3 F_Schlick(in vec3 f0, in float f90, in float u)
+// We have a better approximation of the off specular peak
+// but due to the other approximations we found this one performs better.
+// N is the normal direction
+// R is the mirror vector
+// This approximation works fine for G smith correlated and uncorrelated
+vec3 GetSpecularDominantDir(vec3 N, vec3 R, float roughness)
 {
-	return f0 + (f90 - f0) * pow(1.f - u, 5.f);
+	float smoothness = Saturate(1.0 - roughness);
+	float lerpFactor = smoothness * (sqrt(smoothness) + roughness);
+	// The result is not normalized as we fetch in a cubemap
+	return mix(N, R, lerpFactor);
+}
+vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness)
+{
+	vec3 R = 2 * dot( V, N ) * N - V;
+	vec3 dominantR = GetSpecularDominantDir(N, R, roughness);
+
+	// Rebuild the function
+	// L . D. ( f0.Gv.(1-Fc) + Gv.Fc ) . cosTheta / (4 . NdotL . NdotV)
+	NdotV = max(NdotV , 0.5/128.0);
+	// float mipLevel = linearRoughnessToMipLevel(linearRoughness , mipCount);
+	// vec3 preLD = specularLD.SampleLevel(sampler , dominantR , mipLevel).rgb;
+	vec3 preLD = SamplePanorama(specularEnvmap, dominantR).xyz;
+
+	// Sample pre-integrate DFG
+	// Fc = (1-H.L)^5
+	// PreIntegratedDFG.r = Gv.(1-Fc)
+	// PreIntegratedDFG.g = Gv.Fc
+	// vec2 preDFG = DFG.SampleLevel(sampler , float2(NdotV , roughness), 0).xy;
+	vec2 preDFG = texture(dfgMap, vec2(NdotV, roughness)).xy;
+
+	float f0 = 1.0;
+	float f90 = Saturate(50.0 * dot(f0 , 0.33));
+	// LD . ( f0.Gv.(1-Fc) + Gv.Fc.f90 )
+	return preLD * (f0 * preDFG.x + f90 * preDFG.y);
 }
 
-float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
+vec3 approximationSRgbToLinear(in vec3 sRGBCol)
 {
-	// Original formulation of G_SmithGGX Correlated
-	// lambda_v = (-1 + sqrt(alphaG2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f;
-	// lambda_l = (-1 + sqrt(alphaG2 * (1 - NdotV2) / NdotV2 + 1)) * 0.5f;
-	// G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l);
-	// V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV);
-
-	// This is the optimize version
-	float alphaG2 = alphaG * alphaG;
-	// Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake.
-	float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
-	float Lambda_GGXL = NdotV * sqrt((-NdotL * alphaG2 + NdotL) * NdotL + alphaG2);
-
-	return 0.5f / (Lambda_GGXV + Lambda_GGXL);
+	return pow(sRGBCol , vec3(2.2));
 }
-float D_GGX(float NdotH, float m)
+
+vec3 ApproximationLinearToSRGB(in vec3 linearCol)
 {
-	// Divide by PI is apply later
-	float m2 = m * m;
-	float f = (NdotH * m2 - NdotH) * NdotH + 1;
-	return m2 / (f * f);
+	return pow(linearCol , vec3(1.0 / 2.2));
+}
+
+// vec3 accurateSRGBToLinear(in vec3 sRGBCol)
+// {
+// 	vec3 linearRGBLo = sRGBCol / 12.92;
+// 	vec3 linearRGBHi = pow((sRGBCol + vec3(0.055)) / 1.055, vec3(2.4));
+// 	vec3 linearRGB = (sRGBCol <= vec3(0.04045)) ? linearRGBLo : linearRGBHi;
+// 	return linearRGB;
+// }
+
+vec3 accurateLinearToSRGB(in vec3 linearCol)
+{
+	vec3 sRGBLo = linearCol * 12.92;
+	vec3 sRGBHi = (pow(abs(linearCol), vec3(1.0/2.4)) * 1.055) - vec3(0.055);
+	vec3 sRGB = (linearCol.x <= 0.0031308 || linearCol.y <= 0.0031308 || linearCol.z <= 0.0031308 ) ? sRGBLo : sRGBHi;
+	return sRGB;
 }
 
 void main()
@@ -93,7 +128,9 @@ void main()
 
 	// vec2 ll = vec2(atan(rd.z, rd.x) + PI, acos(-rd.y)) / vec2(2.0 * PI, PI);
 	// fragColor = pow(SamplePanorama(envmap, N) * INV_PI, vec4(1.0/2.2));
-	fragColor = pow(INV_PI * EvaluateIBLDiffuse(N, V, dot(N, V), 0.5), vec4(1.0/2.2));
+	float roughness = 0.1;
+	fragColor.xyz = EvaluateIBLSpecular(N, V, dot(N, V), roughness) * 0.9 + 0.1 * INV_PI * EvaluateIBLDiffuse(N, V, dot(N, V), roughness);
+	fragColor = pow(fragColor * (vec4(212,175,55,255) / 255.0), vec4(1.0/1.0));
+	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
-	
 }

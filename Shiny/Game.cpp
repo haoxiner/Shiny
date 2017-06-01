@@ -37,7 +37,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/mitsuba.obj", mesh);
+    ResourceManager::LoadObjToMesh("../../Resources/Models/mitsuba.obj", mesh);
     //mesh.LoadVertexAttribute(0, 4, true, positions);
     //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadVertexAttribute(1, 4, fnormals);
@@ -68,6 +68,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     //glSamplerParameteri(samplerID_, GL_TEXTURE_MAX_LOD, 3);
     glBindSampler(0, samplerID_);
     glBindSampler(1, samplerID_);
+    glBindSampler(2, samplerID_);
 
     
     
@@ -96,7 +97,18 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     FreeImage_Unload(dib);
     glBindTextureUnit(1, dfgTexture_);
 
-    // cubemap
+    dib = FreeImage_Load(FIF_EXR, "../../uffizi_specular.exr");
+    w = FreeImage_GetWidth(dib);
+    h = FreeImage_GetHeight(dib);
+    std::cerr << w << "," << h << std::endl;
+    bits = FreeImage_GetBits(dib);
+    glCreateTextures(GL_TEXTURE_2D, 1, &dfgTexture_);
+    glTextureStorage2D(dfgTexture_, 1, GL_RGB16F, w, h);
+    glTextureSubImage2D(dfgTexture_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
+    FreeImage_Unload(dib);
+    glBindTextureUnit(2, dfgTexture_);
+
+    //cubemap
     //{
     //    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     //    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &cubemapID_);
@@ -104,13 +116,8 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     //    std::string arr[] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
     //    for (int i = 0; i < 6; i++) {
     //        auto dib = FreeImage_Load(FIF_EXR, ("../../uffizi/uffizi-" + arr[i] + ".exr").c_str());
-    //        if (arr[i] == "NY") {
-    //            
-    //        } else {
-    //            
-    //        }
-    //        FreeImage_FlipHorizontal(dib);
-    //        FreeImage_FlipVertical(dib);
+    //        //FreeImage_FlipHorizontal(dib);
+    //        //FreeImage_FlipVertical(dib);
 
     //        auto bits = FreeImage_GetBits(dib);
     //        w = FreeImage_GetWidth(dib);
@@ -119,7 +126,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     //        glTextureSubImage3D(cubemapID_, 0, 0, 0, i, 1024, 1024, 1, GL_RGB, GL_FLOAT, bits);
     //        FreeImage_Unload(dib);
     //    }
-    //    glBindTextureUnit(1, cubemapID_);
+    //    glBindTextureUnit(2, cubemapID_);
     //}
     return true;
 }

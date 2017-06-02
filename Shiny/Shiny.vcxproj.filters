@@ -93,6 +93,9 @@
     <ClInclude Include="TinyObjLoader.h">
       <Filter>Tools</Filter>
     </ClInclude>
+    <ClInclude Include="PreComputation.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -141,6 +144,9 @@
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="TinyObjLoader.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="PreComputation.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
   </ItemGroup>

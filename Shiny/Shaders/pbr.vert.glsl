@@ -16,13 +16,11 @@ layout(binding = 1, std140) uniform PerFrameConstantBuffer
 layout(binding = 2, std140) uniform PerObjectConstantBuffer
 {
 	mat4 modelToWorld;
+	vec4 material0;
 };
 void main()
 {
 	position = (worldToView * modelToWorld * vec4(vertexAttribute0.xyz, 1.0)).xyz;
-	// vec4 positionInViewSpace = worldToView * vec4(position, 1.0);
-	
-	// viewDirection = normalize(vec3(0.0) - position);
 	normal = normalize(worldToView * modelToWorld * vec4(vertexAttribute1.xyz, 0.0)).xyz;
 	texCoord = vec2(vertexAttribute0.w, vertexAttribute1.w);
 

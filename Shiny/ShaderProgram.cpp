@@ -52,6 +52,16 @@ bool Shiny::ShaderProgram::Startup(const std::string& computeShaderSource) {
     return true;
 }
 
+bool Shiny::ShaderProgram::Startup(const std::string& computeShaderSource, int localSizeX, int localSizeY, int localSizeZ)
+{
+    std::string shaderHeader = "#version 450 core\r\n";
+    shaderHeader +=
+        "layout(local_size_x=" + std::to_string(localSizeX) +
+        ",local_size_y=" + std::to_string(localSizeY) +
+        ",local_size_z=" + std::to_string(localSizeZ) + ") in;\r\n";
+    return Startup(shaderHeader + computeShaderSource);
+}
+
 void Shiny::ShaderProgram::Use() {
     glUseProgram(program_);
 }

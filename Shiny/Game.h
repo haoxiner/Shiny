@@ -13,7 +13,7 @@ class Game
 {
 public:
     bool Startup(int xResolution, int yResolution, const Input* input);
-    void Update(float deltaTime);
+    void Update(float deltaTime, const Input* input);
     void Render();
     void Shutdown();
 private:
@@ -25,6 +25,7 @@ private:
     struct PerObjectConstantBuffer
     {
         Matrix4x4 modelToWorld;
+        Float4 material0;
     };
     struct PerFrameConstantBuffer
     {
@@ -47,7 +48,9 @@ private:
     GLuint specularEnvmapID_;
     GLuint dfgTexture_;
     GLuint samplerID_;
+    GLuint specularSamplerID_;
     GLuint cubemapID_;
     float testFloat_ = 0.0f;
+    float testMetallic_ = 0.0f;
 };
 }

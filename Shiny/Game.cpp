@@ -53,7 +53,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     staticConstantBuffer.viewToProjection = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution) / yResolution, 0.001f, 1000.0f);
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
-    glNamedBufferStorage(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], sizeof(PerObjectConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
+    glNamedBufferStorage(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], sizeof(PerObjectConstantBuffer), nullptr, GL_DYNAMIC_STORAGE_BIT);
     
     for (int i = 0; i < constantBufferList_.size(); i++) {
         glBindBufferBase(GL_UNIFORM_BUFFER, i, constantBufferList_[i]);
@@ -64,12 +64,9 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     //glSamplerParameteri(samplerID_, GL_TEXTURE_MAX_LOD, 3);
     glBindSampler(0, samplerID_);
     glBindSampler(1, samplerID_);
-    glBindSampler(2, samplerID_);
-
     
     
     unsigned int w(0), h(0);
@@ -97,17 +94,34 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     FreeImage_Unload(dib);
     glBindTextureUnit(1, dfgTexture_);
 
-    dib = FreeImage_Load(FIF_EXR, "../../Resources/envmap/uffizi_specular.exr");
+    dib = FreeImage_Load(FIF_EXR, "../../Resources/envmap/uffizi_specular_0.exr");
     w = FreeImage_GetWidth(dib);
     h = FreeImage_GetHeight(dib);
     std::cerr << w << "," << h << std::endl;
     bits = FreeImage_GetBits(dib);
-    glCreateTextures(GL_TEXTURE_2D, 1, &dfgTexture_);
-    glTextureStorage2D(dfgTexture_, 1, GL_RGB16F, w, h);
-    glTextureSubImage2D(dfgTexture_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
-    FreeImage_Unload(dib);
-    glBindTextureUnit(2, dfgTexture_);
-
+    auto maxLevel = 5;
+    glCreateTextures(GL_TEXTURE_2D, 1, &specularEnvmapID_);
+    glBindTextureUnit(2, specularEnvmapID_);
+    glTextureStorage2D(specularEnvmapID_, maxLevel + 1, GL_RGB16F, w, h);
+    for (int level = 0; level <= maxLevel; level++) {
+        if (level > 0) {
+            dib = FreeImage_Load(FIF_EXR, ("../../Resources/envmap/uffizi_specular_" + std::to_string(level) + ".exr").c_str());
+            w = FreeImage_GetWidth(dib);
+            h = FreeImage_GetHeight(dib);
+            std::cerr << w << "," << h << std::endl;
+            bits = FreeImage_GetBits(dib);
+        }
+        glTextureSubImage2D(specularEnvmapID_, level, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
+        FreeImage_Unload(dib);
+    }
+    glCreateSamplers(1, &specularSamplerID_);
+    glSamplerParameteri(specularSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glSamplerParameteri(specularSamplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(specularSamplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(specularSamplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(specularSamplerID_, GL_TEXTURE_MAX_LOD, maxLevel);
+    glSamplerParameteri(specularSamplerID_, GL_TEXTURE_MIN_LOD, 0);
+    glBindSampler(2, specularSamplerID_);
     //cubemap
     //{
     //    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -131,16 +145,21 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     return true;
 }
 
-void Shiny::Game::Update(float deltaTime)
+void Shiny::Game::Update(float deltaTime, const Input* input)
 {
     testFloat_ += deltaTime;
+    if (input->Fire0()) {
+        testMetallic_ = 0.0f;
+    } else if (input->Test()) {
+        testMetallic_ = 1.0f;
+    }
 }
 
 void Shiny::Game::Render()
 {
     //testFloat_ = 00.0f;
-    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 10.0f));
-    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 10.0f));
+    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 5.0f));
+    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 5.0f));
     Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
@@ -149,11 +168,14 @@ void Shiny::Game::Render()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderProgram_.Use();
+    PerObjectConstantBuffer perObjectBuffer;
     for (auto&& mesh : meshes_) {
-        auto perObjectBuffer = static_cast<PerObjectConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], GL_WRITE_ONLY));
-        perObjectBuffer->modelToWorld = MakeTranslationMatrix(Float3(0.0f, -1.0f, -100.0f)) * QuaternionToMatrix(Normalize(quat));
-        glUnmapNamedBuffer(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER]);
-        mesh.Render();
+        for (int i = 0; i <= 10; i++) {
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * /*QuaternionToMatrix(Normalize(quat)) * */MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0));// ;
+            perObjectBuffer.material0 = Float4(1.0f - i / 10.0f, testMetallic_, 0.0f, 0.0f);
+            glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
+            mesh.Render();
+        }
     }
 }
 

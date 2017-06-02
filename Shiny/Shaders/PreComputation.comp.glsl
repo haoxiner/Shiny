@@ -1,10 +1,13 @@
-#version 450 core
+// #version 450 core
+// layout(local_size_x = 8, local_size_y = 8) in;
+
 #define PI 3.1415926535897932384626433832795
 #define INV_PI (1.0/PI)
 int sampleCount = 1024 * 4;
 layout (binding = 0, std140) uniform InputBuffer
 {
 	vec4 inputArg0;
+	vec4 inputArg1;
 };
 layout (binding = 0) uniform sampler2D inputEnvmap;
 layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
@@ -13,6 +16,12 @@ vec4 SamplePanorama(sampler2D panorama, vec3 direction)
 {
 	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
 	return texture(panorama, uv);
+}
+
+vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
+{
+	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
+	return textureLod(panorama, uv, mipmapLevel);
 }
 
 vec3 TexCoordToDirection(vec2 texCoord)
@@ -228,9 +237,9 @@ void ImportanceSampleGGXDir(in vec2 Xi, in vec3 V, in vec3 N, in float Roughness
 	H = ImportanceSampleGGX(Xi, Roughness, N, referential);
 	L = 2 * dot( V, H ) * H - V;
 }
-float D_GGX_Divide_Pi(float roughness, float NdotH)
+float D_GGX_Divide_Pi(float NdotH, float roughness)
 {
-    return D_GGX(roughness, NdotH) / PI;
+    return D_GGX(NdotH, roughness) / PI;
 }
 vec3 IntegrateCubeLDOnly(
 	in vec3 V,
@@ -270,11 +279,10 @@ vec3 IntegrateCubeLDOnly(
 			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
 			float omegaS = 1.0 / (sampleCount * pdf);
 			float omegaP = 4.0 * PI / (inputArg0.x * inputArg0.y);
-			float mipCount = 1.0;
+			float mipCount = inputArg1.x;
 			float mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, mipCount);
-			mipLevel = 0.0;
 			// vec4 Li = IBLCube.SampleLevel(IBLSampler , L, mipLevel);
-			vec4 Li = SamplePanorama(inputEnvmap, L);
+			vec4 Li = SamplePanorama(inputEnvmap, L, mipLevel);
 
 			accBrdf += Li.rgb * NdotL;
 			accBrdfWeight += NdotL;
@@ -308,11 +316,14 @@ void OutputSpecular()
 {
 	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / inputArg0.xy;
 	vec3 d = TexCoordToDirection(texCoord);
-	vec3 specular = IntegrateCubeLDOnly(d, d, 0.1);
+	// level/maxLevel = linearRoughness
+	// roughness = linearRoughness * linearRoughness
+	// level/maxLevel here
+	float roughness = pow(inputArg1.y / inputArg1.z, 4.0);
+	vec3 specular = IntegrateCubeLDOnly(d, d, roughness);
 	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy), vec4(specular, 1.0));
 }
 
-layout(local_size_x = 8, local_size_y = 8) in;
 void main()
 {
 	sampleCount = int(inputArg0.w);

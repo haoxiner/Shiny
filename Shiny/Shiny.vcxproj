@@ -147,6 +147,7 @@
     <ClInclude Include="Display.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="PreComputation.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GLSLProgram.h" />
@@ -168,6 +169,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Display.cpp" />
+    <ClCompile Include="PreComputation.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />

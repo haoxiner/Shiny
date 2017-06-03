@@ -1,25 +1,28 @@
-#version 450 core
+// #version 450 core
+// layout(local_size_x = 8, local_size_y = 8) in;
 #define PI 3.1415926535897932384626433832795
 #define INV_PI (1.0/PI)
-const int sampleCount = 1024;
 
-// layout (binding = 0, std140) uniform SamplesBuffer
-// {
-// 	vec4 samples[sampleCount / 2];
-// };
 layout (binding = 0, std140) uniform InputBuffer
 {
 	vec4 inputArg0;
+	vec4 inputArg1;
 };
 layout (binding = 0) uniform sampler2D inputEnvmap;
 layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
+
+int sampleCount = 1024;
 
 vec4 SamplePanorama(sampler2D panorama, vec3 direction)
 {
 	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
 	return texture(panorama, uv);
 }
-
+vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
+{
+	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
+	return textureLod(panorama, uv, mipmapLevel);
+}
 vec3 TexCoordToDirection(vec2 texCoord)
 {
 	float u = texCoord.s;
@@ -61,7 +64,7 @@ vec3 PrefilterEnvMap( float Roughness, vec3 R )
 	vec3 N = R;
 	vec3 V = R;
 	vec3 PrefilteredColor = vec3(0);
-	const uint NumSamples = 1024 * 16;
+	const uint NumSamples = 1024;
 	float TotalWeight = 0.0;
 	for( uint i = 0; i < NumSamples; i++ )
 	{
@@ -78,7 +81,7 @@ vec3 PrefilterEnvMap( float Roughness, vec3 R )
 	return TotalWeight > 0.0 ? (PrefilteredColor / TotalWeight) : PrefilteredColor;
 }
 
-layout(local_size_x = 32, local_size_y = 32) in;
+
 void main()
 {
 	vec2 texCoord = (vec2(0.5) + vec2(gl_GlobalInvocationID.xy)) / inputArg0.xy;

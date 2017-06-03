@@ -29,13 +29,15 @@ float Saturate(float value)
 
 vec4 SamplePanorama(sampler2D panorama, vec3 direction)
 {
-	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
+	vec4 d = inverse(worldToView) * vec4(direction, 0.0);
+	vec2 uv = vec2(PI + atan(d.x, -d.z), acos(-d.y)) / vec2(2.0 * PI, PI);
 	return texture(panorama, uv);
 }
 
 vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
 {
-	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
+	vec4 d = inverse(worldToView) * vec4(direction, 0.0);
+	vec2 uv = vec2(PI + atan(d.x, -d.z), acos(-d.y)) / vec2(2.0 * PI, PI);
 	return textureLod(panorama, uv, mipmapLevel);
 }
 
@@ -153,13 +155,14 @@ void main()
 	// float specular = pow(max(0.0, dot(N, H)), 1000.0);
 	float smoothness = material0.x;
 	float metallic = material0.y;
-	vec3 color = vec3(0.660, 0.609, 0.526);
+	vec3 color = vec3(0.660, 0,0);
 
 	vec3 baseColor = color;
 	vec3 reflectance = color;
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 
 	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;//vec3(0.560, 0.570, 0.580);
+	f0 = vec3(0.04);
 	vec3 f90 = vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
 	// vec3 rd = normalize(reflect(-V, N));
 	float roughness = pow(1.0 - smoothness, 2.0);

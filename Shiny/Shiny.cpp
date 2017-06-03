@@ -7,6 +7,7 @@
 #include "ResourceManager.h"
 #include "MathUtil.h"
 #include "PreComputation.h"
+#include "PreIntegrator.h"
 #include "FreeImage.h"
 #include <fstream>
 #include <iostream>
@@ -62,11 +63,24 @@ void TestPreComputation()
     //preComputation.LoadSourceFile("../../uffizi.exr");
     //preComputation.ComputeIBLDFG("../../dfg_0.exr");
     preComputation.LoadSourceFile("../../uffizi.exr");
-    //preComputation.ComputeIBLDiffuse("../../uffizi_diffuse.exr");
+    //preComputation.ComputeIBLDiffuse("../../anvil_diffuse.exr");
     preComputation.ComputeIBLSpecular("../../uffizi_specular");
+}
+
+void TestPreIntegrator()
+{
+    constexpr int xResolution = 800;
+    constexpr int yResolution = 600;
+    Shiny::Display display;
+    if (!display.Startup(xResolution, yResolution, false)) {
+        return;
+    }
+    Shiny::PreIntegrator integrator;
+    integrator.LoadCubeMap("../../uffizi/", "uffizi");
+    integrator.ComputeIBLSpecular("../../uffizi_specular");
 }
 int main()
 {
-    TestDisplay();
+    TestPreIntegrator();
     return 0;
 }

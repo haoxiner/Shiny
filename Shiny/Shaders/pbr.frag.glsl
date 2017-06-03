@@ -20,7 +20,7 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 layout(binding = 0) uniform sampler2D diffuseEnvmap;
 layout(binding = 1) uniform sampler2D dfgMap;
 layout(binding = 2) uniform sampler2D specularEnvmap;
-// layout(binding = 2) uniform samplerCube cubemap;
+layout(binding = 3) uniform samplerCube cubemap;
 const uint NumSamples = 1024;
 float Saturate(float value)
 {
@@ -169,6 +169,11 @@ void main()
 	float NdotV = dot(N, V);
 	fragColor.xyz = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90) + diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);
 	// fragColor.xyz = fragColor.xyz * color;
+	
+	// fragColor = SamplePanorama(specularEnvmap, reflect(-V, N), 0.0);
+	fragColor = texture(cubemap, reflect(-V, N));
+	// fragColor = texture(diffuseEnvmap, texCoord);
+
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
 }

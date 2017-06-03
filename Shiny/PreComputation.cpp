@@ -29,7 +29,7 @@ void Shiny::PreComputation::LoadSourceFile(const std::string& fileName)
     glGenerateTextureMipmap(srcTextureID_);
     glBindTextureUnit(0, srcTextureID_);
     glCreateSamplers(1, &linearSamplerID_);
-    glSamplerParameteri(linearSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(linearSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glSamplerParameteri(linearSamplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(linearSamplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glSamplerParameteri(linearSamplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -84,8 +84,8 @@ void Shiny::PreComputation::ComputeIBLDiffuse(const std::string& destFileName)
 
 void Shiny::PreComputation::ComputeIBLSpecular(const std::string& destFileName)
 {
-    int w = 2048, h = w / 2;
-    int sampleCount = 1024 * 4;
+    int w = 1024, h = w / 2;
+    int sampleCount = 1024;
     int maxLevel = 5;
     for (int level = 0; level <= maxLevel; level++) {
         auto inputBuffer = reinterpret_cast<InputBlock*>(glMapNamedBuffer(inputBufferID_, GL_WRITE_ONLY));
@@ -111,8 +111,6 @@ void Shiny::PreComputation::ComputeIBLSpecular(const std::string& destFileName)
         std::cerr << w << "," << h << std::endl;
         w = w / 2;
         h = w / 2;
-        if (level >= 3 && level <= 6)
-            sampleCount *= 4;
     }
 }
 

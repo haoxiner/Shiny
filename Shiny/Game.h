@@ -50,6 +50,7 @@ private:
     GLuint samplerID_;
     GLuint specularSamplerID_;
     GLuint cubemapID_;
+    GLuint cubemapSamplerID_;
     float testFloat_ = 0.0f;
     float testMetallic_ = 0.0f;
 };

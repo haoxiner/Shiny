@@ -274,13 +274,17 @@ vec3 IntegrateCubeLDOnly(
 			//
 			// - OmegaS: Solid angle associated to a sample
 			// - OmegaP: Solid angle associated to a pixel of the cubemap
-			float NdotH = Saturate(dot(N, H));
-			float LdotH = Saturate(dot(L, H));
-			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
-			float omegaS = 1.0 / (sampleCount * pdf);
-			float omegaP = 4.0 * PI / (inputArg0.x * inputArg0.y);
-			float mipCount = inputArg1.x;
-			float mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, mipCount);
+			float mipLevel = 0;
+			if (roughness > 0) {
+				float NdotH = Saturate(dot(N, H));
+				float LdotH = Saturate(dot(L, H));
+				float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
+				float omegaS = 1.0 / (sampleCount * pdf);
+				float omegaP = 4.0 * PI / (inputArg0.x * inputArg0.y);
+				float mipCount = inputArg1.x;
+				mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, mipCount);
+			}
+			mipLevel = 0;
 			// vec4 Li = IBLCube.SampleLevel(IBLSampler , L, mipLevel);
 			vec4 Li = SamplePanorama(inputEnvmap, L, mipLevel);
 

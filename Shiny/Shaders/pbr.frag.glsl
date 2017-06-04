@@ -20,6 +20,8 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 layout(binding = 0) uniform samplerCube diffuseEnvmap;
 layout(binding = 1) uniform sampler2D dfgMap;
 layout(binding = 2) uniform samplerCube specularEnvmap;
+layout(binding = 3) uniform sampler2D baseColorMap;
+layout(binding = 4) uniform sampler2D smoothnessMap;
 // layout(binding = 3) uniform samplerCube cubemap;
 
 float Saturate(float value)
@@ -29,15 +31,13 @@ float Saturate(float value)
 
 vec4 SamplePanorama(sampler2D panorama, vec3 direction)
 {
-	vec4 d = inverse(worldToView) * vec4(direction, 0.0);
-	vec2 uv = vec2(PI + atan(d.x, -d.z), acos(-d.y)) / vec2(2.0 * PI, PI);
+	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
 	return texture(panorama, uv);
 }
 
 vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
 {
-	vec4 d = inverse(worldToView) * vec4(direction, 0.0);
-	vec2 uv = vec2(PI + atan(d.x, -d.z), acos(-d.y)) / vec2(2.0 * PI, PI);
+	vec2 uv = vec2(PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * PI, PI);
 	return textureLod(panorama, uv, mipmapLevel);
 }
 
@@ -117,7 +117,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0,
 	return preLD * (f0 * preDFG.x + f90 * preDFG.y);
 }
 
-vec3 approximationSRgbToLinear(in vec3 sRGBCol)
+vec3 ApproximationSRgbToLinear(in vec3 sRGBCol)
 {
 	return pow(sRGBCol , vec3(2.2));
 }
@@ -175,18 +175,24 @@ void main()
 
 	// float diffuse = max(0.0, dot(L, N));
 	// float specular = pow(max(0.0, dot(N, H)), 1000.0);
-	float smoothness = material0.x;
+	vec2 uv = texCoord * 100.0;
+	float glossiness = pow(texture(smoothnessMap, uv).r, 2.2);
+	float smoothness = glossiness / 1.4;
+	float linearRoughness = 1.0 - smoothness;
+	float roughness = linearRoughness * linearRoughness;
+	
+
 	float metallic = material0.y;
 
-	vec3 baseColor = vec3(0.550, 0.556, 0.554);
+	// vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb) + vec3(glossiness, glossiness * 0.55, glossiness * 0.33);
+	vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb) + vec3(glossiness, glossiness * 0.766, glossiness * 0.336);
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 
 	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;//vec3(0.560, 0.570, 0.580);
 	vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
-	// vec3 rd = normalize(reflect(-V, N));
-	float linearRoughness = 1.0 - smoothness;
-	float roughness = linearRoughness * linearRoughness;
+	// float linearRoughness = 1.0 - smoothness;
+	// float roughness = linearRoughness * linearRoughness;
 	float NdotV = dot(N, V);
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);
@@ -196,5 +202,4 @@ void main()
 	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
-
 }

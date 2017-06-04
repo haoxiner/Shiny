@@ -45,13 +45,14 @@ private:
         NUM_OF_CONSTANT_BUFFER
     };
     std::vector<GLuint> constantBufferList_;
-    GLuint textureID_;
-    GLuint specularEnvmapID_;
+    GLuint baseColorMapID_;
+    GLuint smoothnessMapID_;
     GLuint dfgTexture_;
     GLuint samplerID_;
     GLuint specularSamplerID_;
     Cubemap* specularCubemap_;
     Cubemap* diffuseCubemap_;
+    GLuint materialSamplerID_;
     float testFloat_ = 0.0f;
     float testMetallic_ = 0.0f;
     float testDominant_ = 0.0f;

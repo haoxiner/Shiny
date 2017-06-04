@@ -20,9 +20,9 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 };
 void main()
 {
-	position = (worldToView * modelToWorld * vec4(vertexAttribute0.xyz, 1.0)).xyz;
-	normal = normalize(worldToView * modelToWorld * vec4(vertexAttribute1.xyz, 0.0)).xyz;
+	position = (modelToWorld * vec4(vertexAttribute0.xyz, 1.0)).xyz;
+	normal = normalize(modelToWorld * vec4(vertexAttribute1.xyz, 0.0)).xyz;
 	texCoord = vec2(vertexAttribute0.w, vertexAttribute1.w);
 
-	gl_Position = viewToProjection * vec4(position, 1.0);
+	gl_Position = viewToProjection * worldToView * vec4(position, 1.0);
 }

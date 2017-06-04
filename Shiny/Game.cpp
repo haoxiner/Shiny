@@ -37,7 +37,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", mesh);
+    ResourceManager::LoadObjToMesh("../../Resources/Model/blob.obj", mesh);
     //mesh.LoadVertexAttribute(0, 4, true, positions);
     //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadIndices(indices);
@@ -63,7 +63,14 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindSampler(1, samplerID_);
-    
+
+    glCreateSamplers(1, &materialSamplerID_);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindSampler(3, materialSamplerID_);
+    glBindSampler(4, materialSamplerID_);
     
     {
         auto dib = FreeImage_Load(FIF_EXR, "../../Resources/dfg.exr");
@@ -77,11 +84,38 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         FreeImage_Unload(dib);
         glBindTextureUnit(1, dfgTexture_);
     }
+    {
+        auto dib = FreeImage_Load(FIF_JPEG, "../../Resources/Texture/chrome_albedo.jpg");
+        //FreeImage_AdjustGamma(dib, 2.2);
+        auto w = FreeImage_GetWidth(dib);
+        auto h = FreeImage_GetHeight(dib);
+        auto bpp = FreeImage_GetBPP(dib);
+        std::cerr << w << "," << h <<  ", bpp: " << bpp << std::endl;
+        auto bits = FreeImage_GetBits(dib);
+        glCreateTextures(GL_TEXTURE_2D, 1, &baseColorMapID_);
+        glTextureStorage2D(baseColorMapID_, 1, GL_RGB8, w, h);
+        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, bits);
+        FreeImage_Unload(dib);
+        glBindTextureUnit(3, baseColorMapID_);
+    }
+    {
+        auto dib = FreeImage_Load(FIF_JPEG, "../../Resources/Texture/chrome_glossiness.jpg");
+        auto w = FreeImage_GetWidth(dib);
+        auto h = FreeImage_GetHeight(dib);
+        auto bpp = FreeImage_GetBPP(dib);
+        std::cerr << w << "," << h << ", bpp: " << bpp << std::endl;
+        auto bits = FreeImage_GetBits(dib);
+        glCreateTextures(GL_TEXTURE_2D, 1, &smoothnessMapID_);
+        glTextureStorage2D(smoothnessMapID_, 1, GL_R8, w, h);
+        glTextureSubImage2D(smoothnessMapID_, 0, 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, bits);
+        FreeImage_Unload(dib);
+        glBindTextureUnit(4, smoothnessMapID_);
+    }
     //cubemap
     {
-        specularCubemap_ = new Cubemap("uffizi_specular", true);
+        specularCubemap_ = new Cubemap("doge2_specular", true);
         specularCubemap_->BindTextureUint(2);
-        diffuseCubemap_ = new Cubemap("uffizi_diffuse", false);
+        diffuseCubemap_ = new Cubemap("doge2_diffuse", false);
         diffuseCubemap_->BindTextureUint(0);
     }
     return true;
@@ -104,9 +138,9 @@ void Shiny::Game::Update(float deltaTime, const Input* input)
 
 void Shiny::Game::Render()
 {
-    testFloat_ = 0;
-    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 2.0f));
-    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 2.0f));
+    //testFloat_ = 0;
+    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 6.0f));
+    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 6.0f));
     Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
@@ -117,9 +151,10 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     for (auto&& mesh : meshes_) {
-        for (int i = 0; i <= 10; i++) {
+        for (int i = 0; i <= 0; i++) {
             auto smoothness = 1.0f - i / 10.0f;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
+            //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -2)) * QuaternionToMatrix(Normalize(quat));// ;
             perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             mesh.Render();

@@ -62,9 +62,9 @@ void TestPreComputation()
     Shiny::PreComputation preComputation;
     //preComputation.LoadSourceFile("../../uffizi.exr");
     //preComputation.ComputeIBLDFG("../../dfg_0.exr");
-    preComputation.LoadSourceFile("uffizi");
-    preComputation.ComputeIBLDiffuse("../../output/uffizi_diffuse");
-    preComputation.ComputeIBLSpecular("../../output/uffizi_specular");
+    preComputation.LoadSourceFile("doge2");
+    preComputation.ComputeIBLDiffuse("../../output/doge2_diffuse");
+    preComputation.ComputeIBLSpecular("../../output/doge2_specular");
 }
 
 void TestPreIntegrator()

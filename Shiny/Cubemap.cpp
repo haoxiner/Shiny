@@ -7,9 +7,11 @@ Shiny::Cubemap::Cubemap(const std::string& name, bool enableMipmap, bool isInver
 {
     std::ifstream config("../../Resources/Environment/" + name + "/" + name + ".json");
     int fileMaxMipLevel = 0;
-    config >> fileMaxMipLevel;
+    if (config) {
+        config >> fileMaxMipLevel;
+        config.close();
+    }
     maxMipLevel_ = fileMaxMipLevel;
-    config.close();
     std::cerr << "FILE MAX_MIP_LEVEL: " << fileMaxMipLevel << std::endl;
 
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &textureID_);
@@ -24,6 +26,7 @@ Shiny::Cubemap::Cubemap(const std::string& name, bool enableMipmap, bool isInver
         if (face == 0) {
             width_ = width;
             height_ = height;
+            std::cerr << width << "," << height << ", " << bpp << std::endl;
             if (enableMipmap && fileMaxMipLevel == 0) {
                 maxMipLevel_ = std::log2f(std::fminf(width_, height_));
             }

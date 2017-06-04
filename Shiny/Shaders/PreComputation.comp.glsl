@@ -9,7 +9,8 @@ layout (binding = 0, std140) uniform InputBuffer
 	vec4 inputArg0;
 	vec4 inputArg1;
 };
-layout (binding = 0) uniform sampler2D inputEnvmap;
+// layout (binding = 0) uniform sampler2D inputEnvmap;
+layout (binding = 0) uniform samplerCube inputEnvmap;
 layout (rgba32f, binding = 0) uniform image2D outputEnvmap;
 
 vec4 SamplePanorama(sampler2D panorama, vec3 direction)
@@ -50,8 +51,9 @@ float radicalInverse_VdC(uint bits)
 
 vec2 Hammersley(uint i, uint N)
 {
-    // float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
-    return vec2(float(i) / float(N), radicalInverse_VdC(i));
+    float ri = float(bitfieldReverse(i)) * 2.3283064365386963e-10;
+    return vec2(float(i)/float(N), ri);
+    // return vec2(float(i) / float(N), radicalInverse_VdC(i));
 }
 
 vec2 GetSample(int i, int total)
@@ -227,7 +229,7 @@ vec4 IntegrateDiffuseCube(in vec3 N)
 		// see reference code in appendix
 		ImportanceSampleCosDir(eta, N, L, NdotL , pdf);
 		if (NdotL >0)
-			accBrdf += SamplePanorama(inputEnvmap, L).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
+			accBrdf += texture(inputEnvmap, L).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
 	}
 	return vec4(accBrdf * (1.0 / sampleCount), 1.0);
 }
@@ -275,18 +277,18 @@ vec3 IntegrateCubeLDOnly(
 			// - OmegaS: Solid angle associated to a sample
 			// - OmegaP: Solid angle associated to a pixel of the cubemap
 			float mipLevel = 0;
-			if (roughness > 0) {
-				float NdotH = Saturate(dot(N, H));
-				float LdotH = Saturate(dot(L, H));
-				float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
+			float NdotH = Saturate(dot(N, H));
+			float LdotH = Saturate(dot(L, H));
+			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
+			if (pdf > 0.0) {
 				float omegaS = 1.0 / (sampleCount * pdf);
-				float omegaP = 4.0 * PI / (inputArg0.x * inputArg0.y);
+				float omegaP = 4.0 * PI / (6.0 * float(gl_NumWorkGroups.x * gl_WorkGroupSize.x * gl_NumWorkGroups.y * gl_WorkGroupSize.y));
 				float mipCount = inputArg1.x;
 				mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, mipCount);
 			}
-			mipLevel = 0;
+			
 			// vec4 Li = IBLCube.SampleLevel(IBLSampler , L, mipLevel);
-			vec4 Li = SamplePanorama(inputEnvmap, L, mipLevel);
+			vec4 Li = texture(inputEnvmap, L, mipLevel);
 
 			accBrdf += Li.rgb * NdotL;
 			accBrdfWeight += NdotL;
@@ -294,11 +296,61 @@ vec3 IntegrateCubeLDOnly(
 	}
 	return accBrdf * (1.0f / accBrdfWeight);
 }
+// Calculates a normal vector from the specified texture coordinates and cube face.
+vec3 UVIndexToCubeCoord(vec2 uv, uint face)
+{
+    vec3 n = vec3(0); // This is a normal vector.
+    vec3 t = vec3(0); // This is a tangent vector.
 
+    if (face == 0)
+    {
+        n = vec3(1, 0, 0);
+        t = vec3(0, 1, 0);
+    }
+    else if (face == 1)
+    {
+        n = vec3(-1, 0, 0);
+        t = vec3(0, 1, 0);
+    }
+    else if (face == 2)
+    {
+        n = vec3(0, -1, 0);
+        t = vec3(0, 0, -1);
+    }
+    else if (face == 3)
+    {
+        n = vec3(0, 1, 0);
+        t = vec3(0, 0, 1);
+    }
+    else if (face == 4)
+    {
+        n = vec3(0, 0, -1);
+        t = vec3(0, 1, 0);
+    }
+    else
+    {
+        n = vec3(0, 0, 1);
+        t = vec3(0, 1, 0);
+    }
+
+    // Calculate a binormal vector.
+    vec3 b = cross(n, t);
+
+    // Convert the texture coordinates from [0, 1] to [-1, 1] range.
+    uv = uv * 2 - vec2(1);
+
+    // Calculate a new normal vector for this pixel (current texture coordinates).
+    n = n + t * uv.y + b * uv.x;
+    n.y = -n.y;
+    n.z = -n.z;
+
+    return normalize(n);
+}
 void OutputDiffuse()
 {
 	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / inputArg0.xy;
-	vec3 d = TexCoordToDirection(texCoord);
+	vec3 d = UVIndexToCubeCoord(texCoord, uint(inputArg1.w));
+	// vec3 d = TexCoordToDirection(texCoord);
 	vec4 diffuse = IntegrateDiffuseCube(d);
 	imageStore(outputEnvmap, ivec2(gl_GlobalInvocationID.xy), diffuse);
 }
@@ -318,8 +370,9 @@ void OutputDFG()
 
 void OutputSpecular()
 {
-	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / inputArg0.xy;
-	vec3 d = TexCoordToDirection(texCoord);
+	vec2 texCoord = (vec2(gl_GlobalInvocationID.xy)) / inputArg0.xy;
+	vec3 d = UVIndexToCubeCoord(texCoord, uint(inputArg1.w));
+	// vec3 d = TexCoordToDirection(texCoord);
 	// level/maxLevel = linearRoughness
 	// roughness = linearRoughness * linearRoughness
 	// level/maxLevel here

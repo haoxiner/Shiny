@@ -45,7 +45,7 @@ int TestDisplay()
 void GPUwait()
 {
     GLsync syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    GLenum ret = glClientWaitSync(syncObject, GL_SYNC_FLUSH_COMMANDS_BIT, 1000 * 1000 * 10000);
+    GLenum ret = glClientWaitSync(syncObject, GL_SYNC_FLUSH_COMMANDS_BIT, 1000 * 1000 * 1000);
     if (/*ret == GL_WAIT_FAILED || */ret == GL_TIMEOUT_EXPIRED)
         std::cerr << ("glClientWaitSync failed./n") << std::endl;
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
@@ -62,9 +62,9 @@ void TestPreComputation()
     Shiny::PreComputation preComputation;
     //preComputation.LoadSourceFile("../../uffizi.exr");
     //preComputation.ComputeIBLDFG("../../dfg_0.exr");
-    preComputation.LoadSourceFile("../../uffizi.exr");
-    //preComputation.ComputeIBLDiffuse("../../anvil_diffuse.exr");
-    preComputation.ComputeIBLSpecular("../../uffizi_specular");
+    preComputation.LoadSourceFile("uffizi");
+    preComputation.ComputeIBLDiffuse("../../output/uffizi_diffuse");
+    preComputation.ComputeIBLSpecular("../../output/uffizi_specular");
 }
 
 void TestPreIntegrator()
@@ -81,6 +81,6 @@ void TestPreIntegrator()
 }
 int main()
 {
-    TestPreIntegrator();
+    TestDisplay();
     return 0;
 }

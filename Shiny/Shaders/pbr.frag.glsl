@@ -17,11 +17,11 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 	mat4 modelToWorld;
 	vec4 material0;
 };
-layout(binding = 0) uniform sampler2D diffuseEnvmap;
+layout(binding = 0) uniform samplerCube diffuseEnvmap;
 layout(binding = 1) uniform sampler2D dfgMap;
-layout(binding = 2) uniform sampler2D specularEnvmap;
-layout(binding = 3) uniform samplerCube cubemap;
-const uint NumSamples = 1024;
+layout(binding = 2) uniform samplerCube specularEnvmap;
+// layout(binding = 3) uniform samplerCube cubemap;
+
 float Saturate(float value)
 {
 	return clamp(value, 0.0, 1.0);
@@ -52,8 +52,9 @@ vec3 GetDiffuseDominantDir(vec3 N, vec3 V, float NdotV , float roughness)
 
 vec3 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float roughness)
 {
-	vec3 dominantN = GetDiffuseDominantDir(N, V, NdotV , roughness);
-	vec3 diffuseLighting = SamplePanorama(diffuseEnvmap, dominantN).xyz;
+	// vec3 dominantN = GetDiffuseDominantDir(N, V, NdotV , roughness);
+	vec3 dominantN = N;
+	vec3 diffuseLighting = texture(diffuseEnvmap, dominantN).xyz;
 	float diffF = texture(dfgMap, vec2(NdotV , roughness)).z;
 	return diffuseLighting * diffF;
 }
@@ -102,7 +103,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0,
 	float mipCount = 5;
 	
 	float mipLevel = LinearRoughnessToMipLevel(linearRoughness , mipCount);
-	vec3 preLD = SamplePanorama(specularEnvmap , dominantR , mipLevel).rgb;
+	vec3 preLD = textureLod(specularEnvmap , dominantR , mipLevel).rgb;
 	// vec3 preLD = SamplePanorama(specularEnvmap, dominantR).xyz;
 
 	// Sample pre-integrate DFG
@@ -142,6 +143,27 @@ vec3 accurateLinearToSRGB(in vec3 linearCol)
 	return sRGB;
 }
 
+float A = 0.15;
+float B = 0.50;
+float C = 0.10;
+float D = 0.20;
+float E = 0.02;
+float F = 0.30;
+float W = 11.2;
+
+vec3 Uncharted2Tonemap(vec3 x) {
+   return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+}
+
+//Based on Filmic Tonemapping Operators http://filmicgames.com/archives/75
+vec3 TonemapUncharted2(vec3 color) {
+    float ExposureBias = 2.0;
+    vec3 curr = Uncharted2Tonemap(ExposureBias * color);
+
+    vec3 whiteScale = 1.0 / Uncharted2Tonemap(vec3(W));
+    return curr * whiteScale;
+}
+
 void main()
 {
 	vec3 L = normalize(-position);
@@ -155,25 +177,24 @@ void main()
 	// float specular = pow(max(0.0, dot(N, H)), 1000.0);
 	float smoothness = material0.x;
 	float metallic = material0.y;
-	vec3 color = vec3(0.660, 0,0);
 
-	vec3 baseColor = color;
-	vec3 reflectance = color;
+	vec3 baseColor = vec3(0.550, 0.556, 0.554);
+	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 
 	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;//vec3(0.560, 0.570, 0.580);
-	f0 = vec3(0.04);
-	vec3 f90 = vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
+	vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
 	// vec3 rd = normalize(reflect(-V, N));
-	float roughness = pow(1.0 - smoothness, 2.0);
+	float linearRoughness = 1.0 - smoothness;
+	float roughness = linearRoughness * linearRoughness;
 	float NdotV = dot(N, V);
-	fragColor.xyz = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90) + diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);
-	// fragColor.xyz = fragColor.xyz * color;
-	
-	// fragColor = SamplePanorama(specularEnvmap, reflect(-V, N), 0.0);
-	fragColor = texture(cubemap, reflect(-V, N));
-	// fragColor = texture(diffuseEnvmap, texCoord);
-
+	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90);
+	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);
+	fragColor.xyz = diffuse + specular;
+	float exposure = 3.5;
+	fragColor *= exposure;
+	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
+
 }

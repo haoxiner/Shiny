@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "Entity.h"
 #include "ShaderProgram.h"
+#include "Cubemap.h"
 #include "MathUtil.h"
 #include <vector>
 namespace Shiny
@@ -49,9 +50,10 @@ private:
     GLuint dfgTexture_;
     GLuint samplerID_;
     GLuint specularSamplerID_;
-    GLuint cubemapID_;
-    GLuint cubemapSamplerID_;
+    Cubemap* specularCubemap_;
+    Cubemap* diffuseCubemap_;
     float testFloat_ = 0.0f;
     float testMetallic_ = 0.0f;
+    float testDominant_ = 0.0f;
 };
 }

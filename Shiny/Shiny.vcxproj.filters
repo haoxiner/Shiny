@@ -99,6 +99,9 @@
     <ClInclude Include="PreIntegrator.h">
       <Filter>Tools</Filter>
     </ClInclude>
+    <ClInclude Include="Cubemap.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -154,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="PreIntegrator.cpp">
       <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Cubemap.cpp">
+      <Filter>GPUData</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

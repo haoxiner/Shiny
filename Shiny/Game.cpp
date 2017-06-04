@@ -37,7 +37,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/Model/blob.obj", mesh);
+    ResourceManager::LoadObjToMesh("../../Resources/Model/sphere.obj", mesh);
     //mesh.LoadVertexAttribute(0, 4, true, positions);
     //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadIndices(indices);
@@ -65,12 +65,13 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glBindSampler(1, samplerID_);
 
     glCreateSamplers(1, &materialSamplerID_);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindSampler(3, materialSamplerID_);
     glBindSampler(4, materialSamplerID_);
+    glBindSampler(5, materialSamplerID_);
     
     {
         auto dib = FreeImage_Load(FIF_EXR, "../../Resources/dfg.exr");
@@ -85,7 +86,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         glBindTextureUnit(1, dfgTexture_);
     }
     {
-        auto dib = FreeImage_Load(FIF_JPEG, "../../Resources/Texture/chrome_albedo.jpg");
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Texture/octostone/albedo.png");
         //FreeImage_AdjustGamma(dib, 2.2);
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
@@ -94,12 +95,12 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         auto bits = FreeImage_GetBits(dib);
         glCreateTextures(GL_TEXTURE_2D, 1, &baseColorMapID_);
         glTextureStorage2D(baseColorMapID_, 1, GL_RGB8, w, h);
-        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, bits);
+        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, bits);
         FreeImage_Unload(dib);
         glBindTextureUnit(3, baseColorMapID_);
     }
     {
-        auto dib = FreeImage_Load(FIF_JPEG, "../../Resources/Texture/chrome_glossiness.jpg");
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Texture/octostone/roughness.png");
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
         auto bpp = FreeImage_GetBPP(dib);
@@ -107,9 +108,22 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         auto bits = FreeImage_GetBits(dib);
         glCreateTextures(GL_TEXTURE_2D, 1, &smoothnessMapID_);
         glTextureStorage2D(smoothnessMapID_, 1, GL_R8, w, h);
-        glTextureSubImage2D(smoothnessMapID_, 0, 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, bits);
+        glTextureSubImage2D(smoothnessMapID_, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, bits);
         FreeImage_Unload(dib);
         glBindTextureUnit(4, smoothnessMapID_);
+    }
+    {
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Texture/greasy_metal/metallic.png");
+        auto w = FreeImage_GetWidth(dib);
+        auto h = FreeImage_GetHeight(dib);
+        auto bpp = FreeImage_GetBPP(dib);
+        std::cerr << w << "," << h << ", bpp: " << bpp << std::endl;
+        auto bits = FreeImage_GetBits(dib);
+        glCreateTextures(GL_TEXTURE_2D, 1, &metallicMapID_);
+        glTextureStorage2D(metallicMapID_, 1, GL_R8, w, h);
+        glTextureSubImage2D(metallicMapID_, 0, 0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, bits);
+        FreeImage_Unload(dib);
+        glBindTextureUnit(5, metallicMapID_);
     }
     //cubemap
     {
@@ -154,7 +168,7 @@ void Shiny::Game::Render()
         for (int i = 0; i <= 0; i++) {
             auto smoothness = 1.0f - i / 10.0f;
             //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -2)) * QuaternionToMatrix(Normalize(quat));// ;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0,-0, -2)) * MakeScaleMatrix(1.0, 1.0, 1.0) * QuaternionToMatrix(Normalize(quat));// ;
             perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             mesh.Render();

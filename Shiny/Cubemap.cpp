@@ -45,7 +45,7 @@ Shiny::Cubemap::Cubemap(const std::string& name, bool enableMipmap, bool isInver
             std::cerr << name << ": GEN" << std::endl;
             glGenerateTextureMipmap(textureID_);
         } else {
-            std::cerr << name << ": GEN" << std::endl;
+            std::cerr << name << ": LOAD" << std::endl;
             for (int face = 0; face < 6; face++) {
                 for (int level = 1; level <= maxMipLevel_; level++) {
                     std::string fileName = "../../Resources/Environment/" + name + "/" + name + "_" + FACE_NAME[face] + "_" + std::to_string(level) + ".exr";

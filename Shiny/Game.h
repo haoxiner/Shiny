@@ -47,6 +47,7 @@ private:
     std::vector<GLuint> constantBufferList_;
     GLuint baseColorMapID_;
     GLuint smoothnessMapID_;
+    GLuint metallicMapID_;
     GLuint dfgTexture_;
     GLuint samplerID_;
     GLuint specularSamplerID_;

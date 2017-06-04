@@ -22,6 +22,7 @@ layout(binding = 1) uniform sampler2D dfgMap;
 layout(binding = 2) uniform samplerCube specularEnvmap;
 layout(binding = 3) uniform sampler2D baseColorMap;
 layout(binding = 4) uniform sampler2D smoothnessMap;
+layout(binding = 5) uniform sampler2D metallicMap;
 // layout(binding = 3) uniform samplerCube cubemap;
 
 float Saturate(float value)
@@ -167,32 +168,29 @@ vec3 TonemapUncharted2(vec3 color) {
 void main()
 {
 	vec3 L = normalize(-position);
-	vec3 V = normalize(-position);//normalize(viewDirection);
+	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
 	
-	// vec3 r = normalize(reflect(-L, n));
-	// vec3 H = normalize(L + V);
+	vec2 uv = texCoord * 2.0;
 
-	// float diffuse = max(0.0, dot(L, N));
-	// float specular = pow(max(0.0, dot(N, H)), 1000.0);
-	vec2 uv = texCoord * 100.0;
-	float glossiness = pow(texture(smoothnessMap, uv).r, 2.2);
-	float smoothness = glossiness / 1.4;
-	float linearRoughness = 1.0 - smoothness;
-	float roughness = linearRoughness * linearRoughness;
+	// float smoothness = pow(texture(smoothnessMap, uv).r, 2.2);
+	// float linearRoughness = 1.0 - smoothness;
+	// float roughness = linearRoughness * linearRoughness;
+
+	float roughness = pow(texture(smoothnessMap, uv).r, 2.2);
+	// roughness = 0.2;
+	float metallic = pow(texture(metallicMap, uv).r, 2.2);
+	metallic = 0;
 	
 
-	float metallic = material0.y;
-
-	// vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb) + vec3(glossiness, glossiness * 0.55, glossiness * 0.33);
-	vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb) + vec3(glossiness, glossiness * 0.766, glossiness * 0.336);
+	vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb);
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 
-	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;//vec3(0.560, 0.570, 0.580);
+	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;
 	vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
-	// float linearRoughness = 1.0 - smoothness;
-	// float roughness = linearRoughness * linearRoughness;
+
+
 	float NdotV = dot(N, V);
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);

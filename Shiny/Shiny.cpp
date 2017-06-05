@@ -69,15 +69,6 @@ void TestPreComputation()
 
 void TestPreIntegrator()
 {
-    constexpr int xResolution = 800;
-    constexpr int yResolution = 600;
-    Shiny::Display display;
-    if (!display.Startup(xResolution, yResolution, false)) {
-        return;
-    }
-    Shiny::PreIntegrator integrator;
-    integrator.LoadCubeMap("../../uffizi/", "uffizi");
-    integrator.ComputeIBLSpecular("../../uffizi_specular");
 }
 int main()
 {

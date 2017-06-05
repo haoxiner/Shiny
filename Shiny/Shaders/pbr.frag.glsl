@@ -171,13 +171,14 @@ void main()
 	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
 	
-	vec2 uv = texCoord * 2.0;
+	vec2 uv = texCoord * 8.0;
 
 	// float smoothness = pow(texture(smoothnessMap, uv).r, 2.2);
 	// float linearRoughness = 1.0 - smoothness;
 	// float roughness = linearRoughness * linearRoughness;
 
-	float roughness = pow(texture(smoothnessMap, uv).r, 2.2);
+	float linearRoughness = pow(texture(smoothnessMap, uv).r, 2.2);
+	float roughness = linearRoughness * linearRoughness;
 	// roughness = 0.2;
 	float metallic = pow(texture(metallicMap, uv).r, 2.2);
 	metallic = 0;

@@ -61,10 +61,10 @@ void TestPreComputation()
     }
     Shiny::PreComputation preComputation;
     //preComputation.LoadSourceFile("../../uffizi.exr");
-    //preComputation.ComputeIBLDFG("../../dfg_0.exr");
-    preComputation.LoadSourceFile("doge2");
-    preComputation.ComputeIBLDiffuse("../../output/doge2_diffuse");
-    preComputation.ComputeIBLSpecular("../../output/doge2_specular");
+    preComputation.ComputeIBLDFG("../../output/dfg.exr");
+    preComputation.LoadSourceFile("pisa");
+    preComputation.ComputeIBLDiffuse("../../output/pisa_diffuse");
+    preComputation.ComputeIBLSpecular("../../output/pisa_specular");
 }
 
 void TestPreIntegrator()

@@ -148,6 +148,7 @@
     <ClInclude Include="Display.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="PreComputation.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
@@ -174,6 +175,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Display.cpp" />
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="PreComputation.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>

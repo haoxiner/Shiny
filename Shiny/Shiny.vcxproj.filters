@@ -102,6 +102,9 @@
     <ClInclude Include="Cubemap.h">
       <Filter>GPUData</Filter>
     </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -160,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="Cubemap.cpp">
       <Filter>GPUData</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

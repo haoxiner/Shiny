@@ -4,9 +4,9 @@
 #include <vector>
 #include <iostream>
 
-std::string Shiny::ResourceManager::ReadFileToString(const std::string& path)
+std::string Shiny::ResourceManager::ReadFileToString(const std::string& fileName)
 {
-    std::ifstream fileInputStream(path);
+    std::ifstream fileInputStream(fileName);
     if (!fileInputStream) {
         return "";
     }

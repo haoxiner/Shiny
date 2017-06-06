@@ -7,7 +7,8 @@
 #include "ResourceManager.h"
 #include "MathUtil.h"
 #include "PreIntegrator.h"
-#include "FreeImage.h"
+#include "Config.h"
+#include <FreeImage.h>
 #include <fstream>
 #include <iostream>
 
@@ -80,6 +81,9 @@ void TestPreIntegrator()
 }
 int main()
 {
-    TestPreIntegrator();
+    //TestPreIntegrator();
+    using namespace Shiny;
+
+    std::cerr << sizeof(std::vector<int>(1)) << std::endl;
     return 0;
 }

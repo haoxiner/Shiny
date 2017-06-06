@@ -195,7 +195,7 @@
     <None Include="Shaders\PBR.frag.glsl" />
     <None Include="Shaders\PBR.vert.glsl" />
     <None Include="Shaders\PreComputation.comp.glsl" />
-    <None Include="Shaders\PreIntegrator.comp.glsl" />
+    <None Include="Shaders\PreIntegrator.cs.glsl" />
     <None Include="Shaders\SkyBox.frag.glsl" />
     <None Include="Shaders\SkyBox.vert.glsl" />
   </ItemGroup>

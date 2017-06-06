@@ -184,7 +184,7 @@
     <None Include="Shaders\EpicPreComputation.comp.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\PreIntegrator.comp.glsl">
+    <None Include="Shaders\PreIntegrator.cs.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

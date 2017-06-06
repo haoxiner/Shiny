@@ -13,11 +13,12 @@ layout (binding = 0, std140) uniform InputBuffer
 
 const vec2 INPUT_ENVMAP_SIZE;
 const vec2 INPUT_ENVMAP_MAX_MIPLEVEL;
+const vec2 OUPUT_SIZE;
 
 // input
 layout (binding = 0) uniform samplerCube envmap;
 // output
-layout (rgba32f, binding = 0) uniform image2D destImage;
+layout (rgba32f, binding = 0) uniform image2D outputImage;
 
 // clamp to [0.0, 1.0]
 float Saturate(float value)
@@ -29,6 +30,23 @@ float Saturate(float value)
 bool FloatEqual(float a, float b)
 {
 	return abs(a - b) > FLOAT_EPSILON;
+}
+
+// local reference frame
+struct LocalFrame
+{
+	vec3 tangentX;
+	vec3 tangentY;
+};
+
+// note: we treat N as Z axis, {tX, tY, N} are orthographic
+LocalFrame CreateLocalFrame(vec3 N)
+{
+	LocalFrame frame;
+	vec3 upVector = abs(N.z) < 0.999 ? vec3(0,0,1) : vec3(1,0,0);
+	frame.tangentX = normalize(cross(frame.upVector, N));
+	frame.tangentY = cross(N, frame.tangentX);
+	return frame;
 }
 
 // reverse bits of a float
@@ -90,7 +108,7 @@ float G_SmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
 	return 2.0 * NdotL * NdotV / (Lambda_GGXV + Lambda_GGXL);
 }
 
-// GGX NDF
+// GGX NDF without being divided by PI
 float D_GGX(float NdotH, float m)
 {
 	// Divide by PI is apply later
@@ -119,6 +137,135 @@ float Fr_DisneyDiffuse(
 	float lightScatter = F_Schlick(f0, fd90, NdotL).r;
 	float viewScatter = F_Schlick(f0, fd90, NdotV).r;
 	return lightScatter * viewScatter * energyFactor;
+}
+
+// importance sample cosine direction
+void ImportanceSampleCosDir(
+	in vec2 u,
+	in vec3 N,
+	out vec3 L,
+	out float NdotL,
+	out float pdf)
+{
+	// Local referencial
+	LocalFrame referenceFrame = CreateLocalFrame(N);
+	float u1 = u.x;
+	float u2 = u.y;
+	float r = sqrt(u1);
+	float phi = u2 * PI * 2;
+	L = vec3(r*cos(phi), r*sin(phi), sqrt(max(0.0f,1.0f-u1)));
+	L = normalize(referenceFrame.tangentX * L.y + referenceFrame.tangentY * L.x + N * L.z);
+	NdotL = dot(L,N);
+	pdf = NdotL * INV_PI;
+}
+
+// return micro-surface normal of GGX
+// note: roughness is perceptually linear roughness
+vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N, LocalFrame referential)
+{
+	float a = Roughness * Roughness;
+	float Phi = 2 * PI * Xi.x;
+	float CosTheta = sqrt( (1 - Xi.y) / ( 1 + (a*a - 1) * Xi.y ) );
+	float SinTheta = sqrt( 1 - CosTheta * CosTheta );
+	vec3 H;
+	H.x = SinTheta * cos( Phi );
+	H.y = SinTheta * sin( Phi );
+	H.z = CosTheta;
+	// Tangent to world space
+	return referential.tangentX * H.x + referential.tangentY * H.y + N * H.z;
+}
+
+// calculate micro-surface reflection L,H according to V,N
+void ImportanceSampleGGXDir(in vec2 Xi, in vec3 V, in vec3 N, in float Roughness, out vec3 H, out vec3 L)
+{
+	LocalFrame referential = CreateLocalFrame(N);
+	H = ImportanceSampleGGX(Xi, Roughness, N, referential);
+	L = 2 * dot( V, H ) * H - V;
+}
+
+// 
+float D_GGX_Divide_Pi(float NdotH, float roughness)
+{
+    return D_GGX(NdotH, roughness) / PI;
+}
+
+// G: bidirectional shadowing masking
+void ImportanceSampleGGX_G(
+	in vec2 u, in vec3 V, in vec3 N,
+	in LocalFrame referential, in float roughness,
+	out float NdotH, out float LdotH, out vec3 L, out float G)
+{
+	vec3 H = ImportanceSampleGGX(u, roughness, N, referential);
+	L = 2 * dot( V, H ) * H - V;
+	NdotH = Saturate(dot(N, H));
+	LdotH = Saturate(dot(L, H));
+	float NdotL = Saturate(dot(N, L));
+	float NdotV = Saturate(dot(N, V)); 
+	G = G_SmithGGXCorrelated(NdotL, NdotV, roughness);
+}
+
+// DFG: the brdf part of the split sum
+vec4 IntegrateDFGOnly(
+	in vec3 V,
+	in vec3 N,
+	in float roughness)
+{
+	float NdotV = Saturate(dot(N, V));
+	vec4 acc = vec4(0.0);
+	float accWeight = 0.0;
+	// Compute pre-integration
+	LocalFrame referential = CreateLocalFrame(N);
+	for (int i=0; i<sampleCount; ++i)
+	{
+		vec2 u = GetSample(i, sampleCount);
+		vec3 L = vec3(0);
+		float NdotH = 0;
+		float LdotH = 0;
+		float G = 0;
+		// See [Karis13] for implementation
+		ImportanceSampleGGX_G(u, V, N, referential , roughness , NdotH , LdotH , L, G);
+		// specular GGX DFG preIntegration
+		float NdotL = Saturate(dot(N, L));
+		if (NdotL >0 && G > 0.0)
+		{
+			float GVis = G * LdotH / (NdotH * NdotV);
+			float Fc = pow(1-LdotH , 5.f);
+			acc.x += (1-Fc) * GVis;
+			acc.y += Fc*GVis;
+		}
+		// diffuse Disney preIntegration
+		u = fract(u + 0.5);
+		float pdf;
+		// The pdf is not use because it cancel with other terms
+		// (The 1/PI from diffuse BRDF and the NdotL from Lambert ’s law).
+		ImportanceSampleCosDir(u, N, L, NdotL , pdf);
+		if (NdotL >0)
+		{
+			float LdotH = Saturate(dot(L, normalize(V + L)));
+			float NdotV = Saturate(dot(N, V));
+			acc.z += Fr_DisneyDiffuse(NdotV , NdotL , LdotH , sqrt(roughness));
+		}
+		accWeight += 1.0;
+	}
+	return acc * (1.0f / accWeight);
+}
+
+// cosine sample diffuse lighting
+vec4 IntegrateDiffuseCube(in vec3 N)
+{
+	vec3 accBrdf = vec3(0);
+	for (int i=0; i<sampleCount; ++i)
+	{
+		vec2 eta = GetSample(i, sampleCount);
+		vec3 L;
+		float NdotL;
+		float pdf;
+		// see reference code in appendix
+		ImportanceSampleCosDir(eta, N, L, NdotL , pdf);
+		if (NdotL >0)
+			accBrdf += texture(inputEnvmap, L).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
+	}
+	return vec4(accBrdf * (1.0 / sampleCount), 1.0);
 }
 
 // calculate specular sum part
@@ -178,7 +325,7 @@ vec3 IntegrateCubeLDOnly(
 }
 
 // calculates a normal vector from the specified texture coordinates and cube face.
-vec3 TexCoordToDirection(vec2 uv, uint face)
+vec3 CubeFaceTexCoordToDirection(vec2 uv, uint face)
 {
     vec3 n = vec3(0.0); // This is a normal vector.
     vec3 t = vec3(0.0); // This is a tangent vector.
@@ -225,8 +372,23 @@ vec3 TexCoordToDirection(vec2 uv, uint face)
 
 void main()
 {
+	vec2 outputTexCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / OUPUT_SIZE;
+	vec4 outputColor = vec4(0.0);
 	#ifdef CALCULATE_DFG
+	float NdotV = outputTexCoord.x;
+	float roughness = outputTexCoord.y;
+	vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0, NdotV);
+	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness);
 	#elif CALCULATE_SPECULAR_CUBE_MAP
+	vec3 direction = CubeFaceTexCoordToDirection(texCoord, uint(inputArg1.w));
+	// level/maxLevel = linearRoughness
+	// roughness = linearRoughness * linearRoughness
+	// level/maxLevel here
+	float roughness = pow(inputarg1.y / inputArg1.z, 4.0);
+	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, roughness);
 	#elif CALCULATE_DIFFUSE_CUBE_MAP
+	vec3 n = CubeFaceTexCoordToDirection(texCoord, uint(inputArg1.w));
+	outputColor = IntegrateDiffuseCube(n);
 	#endif
+	imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), outputColor);
 }

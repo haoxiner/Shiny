@@ -3,9 +3,13 @@
 #include <iostream>
 #include <vector>
 
-Shiny::ShaderProgram::ShaderProgram()
+Shiny::ShaderProgram::ShaderProgram() :program_(glCreateProgram())
 {
-    program_ = glCreateProgram();
+}
+
+Shiny::ShaderProgram::~ShaderProgram()
+{
+    Shutdown();
 }
 
 bool Shiny::ShaderProgram::Startup(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
@@ -62,12 +66,30 @@ bool Shiny::ShaderProgram::Startup(const std::string& computeShaderSource, int l
     return Startup(shaderHeader + computeShaderSource);
 }
 
+bool Shiny::ShaderProgram::Startup(const std::string& computeShaderSource,
+                                   int localSizeX, int localSizeY, int localSizeZ,
+                                   const std::vector<std::string>& macroList)
+{
+    std::string shaderHeader = "#version 450 core\r\n";
+    shaderHeader +=
+        "layout(local_size_x=" + std::to_string(localSizeX) +
+        ",local_size_y=" + std::to_string(localSizeY) +
+        ",local_size_z=" + std::to_string(localSizeZ) + ") in;\r\n";
+    for (const auto& macro : macroList) {
+        shaderHeader += ("#define " + macro + "\r\n");
+    }
+    return Startup(shaderHeader + computeShaderSource);
+}
+
 void Shiny::ShaderProgram::Use() {
     glUseProgram(program_);
 }
 
 void Shiny::ShaderProgram::Shutdown() {
-    glDeleteProgram(program_);
+    if (program_ != 0) {
+        glDeleteProgram(program_);
+        program_ = 0;
+    }
 }
 
 GLuint Shiny::ShaderProgram::LoadShader(const std::string& source, GLenum type) {

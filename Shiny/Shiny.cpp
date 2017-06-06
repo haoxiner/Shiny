@@ -6,7 +6,6 @@
 #include "Game.h"
 #include "ResourceManager.h"
 #include "MathUtil.h"
-#include "PreComputation.h"
 #include "PreIntegrator.h"
 #include "FreeImage.h"
 #include <fstream>
@@ -51,7 +50,23 @@ void GPUwait()
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
     glDeleteSync(syncObject);
 }
-void TestPreComputation()
+//void TestPreComputation()
+//{
+//    constexpr int xResolution = 800;
+//    constexpr int yResolution = 600;
+//    Shiny::Display display;
+//    if (!display.Startup(xResolution, yResolution, false)) {
+//        return;
+//    }
+//    Shiny::PreComputation preComputation;
+//    //preComputation.LoadSourceFile("../../uffizi.exr");
+//    preComputation.ComputeIBLDFG("../../output/dfg.exr");
+//    preComputation.LoadSourceFile("pisa");
+//    preComputation.ComputeIBLDiffuse("../../output/pisa_diffuse");
+//    preComputation.ComputeIBLSpecular("../../output/pisa_specular");
+//}
+
+void TestPreIntegrator()
 {
     constexpr int xResolution = 800;
     constexpr int yResolution = 600;
@@ -59,19 +74,12 @@ void TestPreComputation()
     if (!display.Startup(xResolution, yResolution, false)) {
         return;
     }
-    Shiny::PreComputation preComputation;
-    //preComputation.LoadSourceFile("../../uffizi.exr");
-    preComputation.ComputeIBLDFG("../../output/dfg.exr");
-    preComputation.LoadSourceFile("pisa");
-    preComputation.ComputeIBLDiffuse("../../output/pisa_diffuse");
-    preComputation.ComputeIBLSpecular("../../output/pisa_specular");
-}
-
-void TestPreIntegrator()
-{
+    
+    Shiny::PreIntegrator preIntegrator;
+    preIntegrator.IntegrateIBLDFG("test_dfg", "G:/");
 }
 int main()
 {
-    TestDisplay();
+    TestPreIntegrator();
     return 0;
 }

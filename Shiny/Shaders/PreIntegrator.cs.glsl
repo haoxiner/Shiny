@@ -11,12 +11,12 @@ layout (binding = 0, std140) uniform InputBuffer
 	vec4 inputArg1;
 };
 
-const vec2 INPUT_ENVMAP_SIZE;
-const vec2 INPUT_ENVMAP_MAX_MIPLEVEL;
-const vec2 OUPUT_SIZE;
+const uint INPUT_ENVMAP_MAX_MIPLEVEL = uint(inputArg0[0]);
+const vec2 OUPUT_SIZE = vec2(inputArg0[1]);
+const uint NUM_OF_SAMPLES = uint(inputArg0[2]);
 
 // input
-layout (binding = 0) uniform samplerCube envmap;
+layout (binding = 0) uniform samplerCube inputEnvmap;
 // output
 layout (rgba32f, binding = 0) uniform image2D outputImage;
 
@@ -44,7 +44,7 @@ LocalFrame CreateLocalFrame(vec3 N)
 {
 	LocalFrame frame;
 	vec3 upVector = abs(N.z) < 0.999 ? vec3(0,0,1) : vec3(1,0,0);
-	frame.tangentX = normalize(cross(frame.upVector, N));
+	frame.tangentX = normalize(cross(upVector, N));
 	frame.tangentY = cross(N, frame.tangentX);
 	return frame;
 }
@@ -74,6 +74,20 @@ vec2 GetSample(uint i, uint total)
 	return Hammersley(i, total);
 }
 
+// ======================== no need to support panorama ======================================== //
+vec4 SamplePanorama(sampler2D panorama, vec3 direction)
+{
+	vec2 uv = vec2(M_PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * M_PI, M_PI);
+	return texture(panorama, uv);
+}
+
+vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
+{
+	vec2 uv = vec2(M_PI + atan(direction.x, -direction.z), acos(-direction.y)) / vec2(2.0 * M_PI, M_PI);
+	return textureLod(panorama, uv, mipmapLevel);
+}
+// ======================== no need to support panorama ======================================== //
+
 // schlick approximation of the fresnel equation
 // f90 = 1.0 all the time in our Shiny Engine
 vec3 F_Schlick(in vec3 f0, in float f90, in float u)
@@ -82,6 +96,7 @@ vec3 F_Schlick(in vec3 f0, in float f90, in float u)
 }
 
 // height correlated version of smith GGX V
+// used in analytic lighting
 float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
 {
 	// Original formulation of G_SmithGGX Correlated
@@ -96,7 +111,7 @@ float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
 	float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
 	float Lambda_GGXL = NdotV * sqrt((-NdotL * alphaG2 + NdotL) * NdotL + alphaG2);
 
-	return 0.5f / (Lambda_GGXV + Lambda_GGXL);
+	return 0.5 / (Lambda_GGXV + Lambda_GGXL);
 }
 
 // height correlated version of smith GGX G
@@ -152,11 +167,11 @@ void ImportanceSampleCosDir(
 	float u1 = u.x;
 	float u2 = u.y;
 	float r = sqrt(u1);
-	float phi = u2 * PI * 2;
+	float phi = u2 * M_PI * 2;
 	L = vec3(r*cos(phi), r*sin(phi), sqrt(max(0.0f,1.0f-u1)));
 	L = normalize(referenceFrame.tangentX * L.y + referenceFrame.tangentY * L.x + N * L.z);
 	NdotL = dot(L,N);
-	pdf = NdotL * INV_PI;
+	pdf = NdotL * M_INV_PI;
 }
 
 // return micro-surface normal of GGX
@@ -164,7 +179,7 @@ void ImportanceSampleCosDir(
 vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N, LocalFrame referential)
 {
 	float a = Roughness * Roughness;
-	float Phi = 2 * PI * Xi.x;
+	float Phi = 2 * M_PI * Xi.x;
 	float CosTheta = sqrt( (1 - Xi.y) / ( 1 + (a*a - 1) * Xi.y ) );
 	float SinTheta = sqrt( 1 - CosTheta * CosTheta );
 	vec3 H;
@@ -181,12 +196,6 @@ void ImportanceSampleGGXDir(in vec2 Xi, in vec3 V, in vec3 N, in float Roughness
 	LocalFrame referential = CreateLocalFrame(N);
 	H = ImportanceSampleGGX(Xi, Roughness, N, referential);
 	L = 2 * dot( V, H ) * H - V;
-}
-
-// 
-float D_GGX_Divide_Pi(float NdotH, float roughness)
-{
-    return D_GGX(NdotH, roughness) / PI;
 }
 
 // G: bidirectional shadowing masking
@@ -215,9 +224,9 @@ vec4 IntegrateDFGOnly(
 	float accWeight = 0.0;
 	// Compute pre-integration
 	LocalFrame referential = CreateLocalFrame(N);
-	for (int i=0; i<sampleCount; ++i)
+	for (uint i=0; i<NUM_OF_SAMPLES; ++i)
 	{
-		vec2 u = GetSample(i, sampleCount);
+		vec2 u = GetSample(i, NUM_OF_SAMPLES);
 		vec3 L = vec3(0);
 		float NdotH = 0;
 		float LdotH = 0;
@@ -226,7 +235,7 @@ vec4 IntegrateDFGOnly(
 		ImportanceSampleGGX_G(u, V, N, referential , roughness , NdotH , LdotH , L, G);
 		// specular GGX DFG preIntegration
 		float NdotL = Saturate(dot(N, L));
-		if (NdotL >0 && G > 0.0)
+		if (NdotL > 0 && G > 0.0)
 		{
 			float GVis = G * LdotH / (NdotH * NdotV);
 			float Fc = pow(1-LdotH , 5.f);
@@ -254,18 +263,18 @@ vec4 IntegrateDFGOnly(
 vec4 IntegrateDiffuseCube(in vec3 N)
 {
 	vec3 accBrdf = vec3(0);
-	for (int i=0; i<sampleCount; ++i)
+	for (uint i=0; i<NUM_OF_SAMPLES; ++i)
 	{
-		vec2 eta = GetSample(i, sampleCount);
+		vec2 eta = GetSample(i, NUM_OF_SAMPLES);
 		vec3 L;
 		float NdotL;
 		float pdf;
 		// see reference code in appendix
 		ImportanceSampleCosDir(eta, N, L, NdotL , pdf);
 		if (NdotL >0)
-			accBrdf += texture(inputEnvmap, L).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
+			accBrdf += textureLod(inputEnvmap, L, 0.0).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
 	}
-	return vec4(accBrdf * (1.0 / sampleCount), 1.0);
+	return vec4(accBrdf * (1.0 / float(NUM_OF_SAMPLES)), 1.0);
 }
 
 // calculate specular sum part
@@ -276,9 +285,9 @@ vec3 IntegrateCubeLDOnly(
 {
 	vec3 accBrdf = vec3(0);
 	float accBrdfWeight = 0;
-	for (int i=0; i<sampleCount; ++i)
+	for (uint i=0; i<NUM_OF_SAMPLES; ++i)
 	{
-		vec2 eta = GetSample(i, sampleCount);
+		vec2 eta = GetSample(i, NUM_OF_SAMPLES);
 		vec3 L;
 		vec3 H;
 		ImportanceSampleGGXDir(eta, V, N, roughness , H, L);
@@ -307,12 +316,12 @@ vec3 IntegrateCubeLDOnly(
 			float LdotH = Saturate(dot(L, H));
 			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
 			if (pdf > FLOAT_EPSILON) {
-				float omegaS = 1.0 / (sampleCount * pdf);
+				float omegaS = 1.0 / (float(NUM_OF_SAMPLES) * pdf);
 				float omegaP = 4.0 * M_PI / (6.0 * float(gl_NumWorkGroups.x * gl_WorkGroupSize.x * gl_NumWorkGroups.y * gl_WorkGroupSize.y));
-				float mipCount = INPUT_ENVMAP_MAX_MIPLEVEL;
-				mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, mipCount);
+				float maxMipLevel = float(INPUT_ENVMAP_MAX_MIPLEVEL);
+				mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, maxMipLevel);
 			}
-			vec4 Li = texture(inputEnvmap, L, mipLevel);
+			vec4 Li = textureLod(inputEnvmap, L, mipLevel);
 
 			accBrdf += Li.rgb * NdotL;
 			accBrdfWeight += NdotL;
@@ -374,19 +383,19 @@ void main()
 {
 	vec2 outputTexCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / OUPUT_SIZE;
 	vec4 outputColor = vec4(0.0);
-	#ifdef CALCULATE_DFG
+	#ifdef INTEGRATE_DFG
 	float NdotV = outputTexCoord.x;
 	float roughness = outputTexCoord.y;
 	vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0, NdotV);
 	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness);
-	#elif CALCULATE_SPECULAR_CUBE_MAP
+	#elif INTEGRATE_SPECULAR
 	vec3 direction = CubeFaceTexCoordToDirection(texCoord, uint(inputArg1.w));
 	// level/maxLevel = linearRoughness
 	// roughness = linearRoughness * linearRoughness
-	// level/maxLevel here
+	// GGX alpha = roughness
 	float roughness = pow(inputarg1.y / inputArg1.z, 4.0);
 	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, roughness);
-	#elif CALCULATE_DIFFUSE_CUBE_MAP
+	#elif INTEGRATE_DIFFUSE
 	vec3 n = CubeFaceTexCoordToDirection(texCoord, uint(inputArg1.w));
 	outputColor = IntegrateDiffuseCube(n);
 	#endif

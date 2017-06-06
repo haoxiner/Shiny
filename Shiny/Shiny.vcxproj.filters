@@ -22,7 +22,7 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{b47ededa-37e8-4a9e-97d3-5b633645673c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Tools">
+    <Filter Include="OfflineTools">
       <UniqueIdentifier>{0c7f61cb-0fec-4828-9baa-1100414baa77}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -91,13 +91,13 @@
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="TinyObjLoader.h">
-      <Filter>Tools</Filter>
+      <Filter>OfflineTools</Filter>
     </ClInclude>
     <ClInclude Include="PreComputation.h">
-      <Filter>Tools</Filter>
+      <Filter>OfflineTools</Filter>
     </ClInclude>
     <ClInclude Include="PreIntegrator.h">
-      <Filter>Tools</Filter>
+      <Filter>OfflineTools</Filter>
     </ClInclude>
     <ClInclude Include="Cubemap.h">
       <Filter>GPUData</Filter>
@@ -150,13 +150,13 @@
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="TinyObjLoader.cpp">
-      <Filter>Tools</Filter>
+      <Filter>OfflineTools</Filter>
     </ClCompile>
     <ClCompile Include="PreComputation.cpp">
-      <Filter>Tools</Filter>
+      <Filter>OfflineTools</Filter>
     </ClCompile>
     <ClCompile Include="PreIntegrator.cpp">
-      <Filter>Tools</Filter>
+      <Filter>OfflineTools</Filter>
     </ClCompile>
     <ClCompile Include="Cubemap.cpp">
       <Filter>GPUData</Filter>

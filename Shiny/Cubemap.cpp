@@ -82,7 +82,7 @@ Shiny::Cubemap::~Cubemap()
     glDeleteTextures(1, &textureID_);
 }
 
-void Shiny::Cubemap::BindTextureUint(int unit)
+void Shiny::Cubemap::BindTextureUint(int unit) const
 {
     glBindTextureUnit(unit, textureID_);
     glBindSampler(unit, samplerID_);

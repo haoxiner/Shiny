@@ -83,7 +83,8 @@ int main()
 {
     //TestPreIntegrator();
     using namespace Shiny;
-
-    std::cerr << sizeof(std::vector<int>(1)) << std::endl;
+    Config config;
+    bool b = config.Parse("../../test.json");
+    std::cerr << b << "," << config.GetFloat("max_mip_level") << std::endl;
     return 0;
 }

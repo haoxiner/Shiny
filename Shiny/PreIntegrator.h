@@ -9,8 +9,11 @@ namespace Shiny
 class PreIntegrator
 {
 public:
-    void IntegrateIBLDFG(const std::string& outputID, const std::string& outputPath);
-    void IntegrateIBLDiffuseAndSpecular(const std::string& inputID, const std::string& inputDirectory, const std::string& outputID, const std::string& outputDirectory);
+    void IntegrateIBLDFG(const std::string& outputID, const std::string& outputDirectory);
+    void IntegrateIBLDiffuseAndSpecular(const std::string& inputDirectory,
+                                        const std::string& inputID,
+                                        const std::string& outputDirectory,
+                                        const std::string& outputID);
 private:
     void Save(GLuint textureID, const std::string& fileName, int width, int height, bool invertHorizontal, bool invertVertical);
     struct ArgumentsBlock

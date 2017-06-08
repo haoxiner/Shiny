@@ -171,7 +171,7 @@ void main()
 	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
 	
-	vec2 uv = texCoord * 8.0;
+	vec2 uv = texCoord * 2.0;
 
 	// float smoothness = pow(texture(smoothnessMap, uv).r, 2.2);
 	// float linearRoughness = 1.0 - smoothness;

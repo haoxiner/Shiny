@@ -44,12 +44,12 @@ void Shiny::PreIntegrator::IntegrateIBLDFG(const std::string& fileID, const std:
     glDeleteTextures(1, &outputTextureID);
 }
 
-void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inputID,
-                                                          const std::string& inputPath,
-                                                          const std::string& outputID,
-                                                          const std::string& outputPath)
+void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inputDirectory,
+                                                          const std::string& inputID,
+                                                          const std::string& outputDirectory,
+                                                          const std::string& outputID)
 {
-    const int outputWidth = 512;
+    const int diffuseOutputWidth = 64;
     const int samplesPerPixel = 1024 * 4;
 
     const std::string FACE_NAME[] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
@@ -59,9 +59,9 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
     glNamedBufferStorage(argsBufferID, sizeof(ArgumentsBlock), nullptr, GL_MAP_WRITE_BIT);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, argsBufferID);
 
-    Cubemap cubemap(inputPath + "/" + inputID, true);
-    auto srcMaxLevel = cubemap.GetMaxMipLevel();
+    Cubemap cubemap(inputDirectory, inputID);
     cubemap.BindTextureUint(0);
+    auto srcMaxLevel = cubemap.GetMaxMipLevel();
     auto shaderSource_ = Shiny::ResourceManager::ReadFileToString("./Shaders/PreIntegrator.cs.glsl");
     ShaderProgram computeShaderProgram;
     const int local_size_x = 32;
@@ -70,7 +70,7 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
     computeShaderProgram.Startup(shaderSource_, local_size_x, local_size_y, local_size_z, { "INTEGRATE_DIFFUSE" });
     for (int face = 0; face < 6; face++) {
         auto inputBuffer = reinterpret_cast<ArgumentsBlock*>(glMapNamedBuffer(argsBufferID, GL_WRITE_ONLY));
-        inputBuffer->inputArg0 = { cubemap.GetWidth(), outputWidth, samplesPerPixel, 0 };
+        inputBuffer->inputArg0 = { cubemap.GetWidth(), diffuseOutputWidth, samplesPerPixel, 0 };
         inputBuffer->inputArg1.x = cubemap.GetMaxMipLevel();
         inputBuffer->inputArg1.y = 0;
         inputBuffer->inputArg1.z = 0;
@@ -79,15 +79,45 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
         GLuint outputTextureID;
         glCreateTextures(GL_TEXTURE_2D, 1, &outputTextureID);
         glBindImageTexture(0, outputTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-        glTextureStorage2D(outputTextureID, 1, GL_RGBA32F, outputWidth, outputWidth);
-        ShaderProgram computeShaderProgram;
+        glTextureStorage2D(outputTextureID, 1, GL_RGBA32F, diffuseOutputWidth, diffuseOutputWidth);
         // dispatch computation works
         computeShaderProgram.Use();
-        glDispatchCompute(outputWidth / local_size_x, outputWidth / local_size_y, local_size_z);
+        glDispatchCompute(diffuseOutputWidth / local_size_x, diffuseOutputWidth / local_size_y, local_size_z);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        Save(outputTextureID, outputDirectory + "/" + outputID + "_diffuse_" + FACE_NAME[face] + ".exr", diffuseOutputWidth, diffuseOutputWidth, true, true);
+    }
+    computeShaderProgram.Shutdown();
+
+    const int outputMaxMipLevel = 5;
+    int specularOutputWidth = 512;
+    for (int level = 0; level <= outputMaxMipLevel; level++) {
+        int local_size_x = std::min(specularOutputWidth, 32);
+        int local_size_y = local_size_x;
+        int local_size_z = 1;
+        ShaderProgram computeSpecular;
+        computeSpecular.Startup(shaderSource_, local_size_x, local_size_y, local_size_z, { "INTEGRATE_SPECULAR" });
+        computeSpecular.Use();
+        for (int face = 0; face < 6; face++) {
+            auto inputBuffer = reinterpret_cast<ArgumentsBlock*>(glMapNamedBuffer(argsBufferID, GL_WRITE_ONLY));
+            inputBuffer->inputArg0 = { cubemap.GetWidth(), specularOutputWidth, samplesPerPixel, 0 };
+            inputBuffer->inputArg1.x = cubemap.GetMaxMipLevel();
+            inputBuffer->inputArg1.y = level;
+            inputBuffer->inputArg1.z = outputMaxMipLevel;
+            inputBuffer->inputArg1.w = face;
+            glUnmapNamedBuffer(argsBufferID);
+            GLuint outputTextureID;
+            glCreateTextures(GL_TEXTURE_2D, 1, &outputTextureID);
+            glBindImageTexture(0, outputTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+            glTextureStorage2D(outputTextureID, 1, GL_RGBA32F, specularOutputWidth, specularOutputWidth);
+            glDispatchCompute(specularOutputWidth / local_size_x, specularOutputWidth / local_size_y, local_size_z);
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            Save(outputTextureID, outputDirectory + "/" + outputID + "_" + FACE_NAME[face] + (level > 0 ? ("_" + std::to_string(level)) : "") + ".exr", specularOutputWidth, specularOutputWidth, true, true);
+        }
+        computeSpecular.Shutdown();
+        std::cerr << specularOutputWidth << std::endl;
+        specularOutputWidth = specularOutputWidth / 2;
     }
     glDeleteBuffers(1, &argsBufferID);
-    computeShaderProgram.Shutdown();
 }
 
 void Shiny::PreIntegrator::Save(GLuint textureID, const std::string& fileName, int width, int height, bool invertHorizontal, bool invertVertical)

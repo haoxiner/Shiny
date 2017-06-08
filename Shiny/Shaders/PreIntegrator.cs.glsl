@@ -2,7 +2,7 @@
 // layout(local_size_x = 8, local_size_y = 8) in;
 #define M_PI 3.14159265358979323846
 #define M_INV_PI (1.0/M_PI)
-#define FLOAT_EPSILON 1e-6
+#define FLOAT_EPSILON 0.0
 
 // arguments for prefilter
 layout (binding = 0, std140) uniform InputBuffer
@@ -388,15 +388,15 @@ void main()
 	float roughness = outputTexCoord.y;
 	vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0, NdotV);
 	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness);
-	#elif INTEGRATE_SPECULAR
-	vec3 direction = CubeFaceTexCoordToDirection(texCoord, uint(inputArg1.w));
+	#elif defined (INTEGRATE_SPECULAR)
+	vec3 direction = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	// level/maxLevel = linearRoughness
 	// roughness = linearRoughness * linearRoughness
 	// GGX alpha = roughness
-	float roughness = pow(inputarg1.y / inputArg1.z, 4.0);
+	float roughness = pow(inputArg1.y / inputArg1.z, 4.0);
 	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, roughness);
-	#elif INTEGRATE_DIFFUSE
-	vec3 n = CubeFaceTexCoordToDirection(texCoord, uint(inputArg1.w));
+	#elif defined (INTEGRATE_DIFFUSE)
+	vec3 n = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	outputColor = IntegrateDiffuseCube(n);
 	#endif
 	imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), outputColor);

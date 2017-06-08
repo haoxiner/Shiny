@@ -11,7 +11,7 @@ namespace Json
 enum ValueType
 {
     JSON_NULL = -5,
-    JSON_BOOL = -4,
+    JSON_BOOLEAN = -4,
     JSON_NUMBER = -3,
     JSON_STRING = -2,
     JSON_OBJECT = -1,
@@ -20,14 +20,16 @@ enum ValueType
 class JsonObject;
 class JsonValue
 {
+    friend class Parser;
 public:
     JsonValue();
     JsonValue(float number);
     JsonValue(bool boolean);
-    JsonValue(const char* str);
-    JsonValue(const JsonObject* object);
+    JsonValue(char* str);
+    JsonValue(JsonObject* object);
     void Destroy();
     int AsInt() const;
+    bool AsBool() const;
     float AsFloat() const;
     Float2 AsFloat2() const;
     Float3 AsFloat3() const;
@@ -41,17 +43,16 @@ private:
     {
         Value(bool value) : boolean(value) {}
         Value(float value) : number(value) {}
-        Value(const char* value) : str(value) {}
-        Value(const JsonObject* value) : object(value) {}
-        Value(const JsonValue* value) : array(value) {}
-        const bool boolean;
-        const float number;
-        const char* str;
-        const JsonObject* object;
-        const JsonValue* array;
+        Value(char* value) : str(value) {}
+        Value(JsonObject* value) : object(value) {}
+        bool boolean;
+        float number;
+        char* str;
+        JsonObject* object;
+        std::vector<JsonValue>* array;
     };
-    const Value value_ = { false };
-    const ValueType type_ = JSON_NULL;
+    Value data_ = { false };
+    ValueType type_ = JSON_NULL;
     static const JsonValue NULL_OBJECT;
 };
 class Parser
@@ -66,11 +67,14 @@ private:
     bool SkipComments();
     void SkipSpacesAndComments();
 
-    bool ParseObject(JsonObject* object);
+    void ParseObject(JsonObject* object);
+    void ParseBoolean(JsonValue& value);
+    void ParseValue(JsonValue& value);
+    void ParseNumber(JsonValue& value);
+    void ParseArray(JsonValue& value);
 
     std::pair<size_t, size_t> FindStringRange();
     std::string ParseString();
-    float ParseNumber();
 
     const char* json_ = nullptr;
     const size_t length_ = 0;
@@ -87,7 +91,7 @@ class JsonObject
     friend class Parser;
 public:
     ~JsonObject();
-    JsonValue& GetValue(const std::string& key);
+    const JsonValue& GetValue(const std::string& key) const;
 private:
     std::map<std::string, JsonValue> valueTable_;
 };

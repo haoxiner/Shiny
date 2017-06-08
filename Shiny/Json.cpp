@@ -1,51 +1,62 @@
 #include "Json.h"
 #include <cctype>
-
+#include <iostream>
 const Shiny::Json::JsonValue Shiny::Json::JsonValue::NULL_OBJECT;
 
-Shiny::Json::JsonValue::JsonValue() : type_(JSON_NULL), value_({ false })
+Shiny::Json::JsonValue::JsonValue() : type_(JSON_NULL), data_({ false })
 {
 }
 
-Shiny::Json::JsonValue::JsonValue(float number) : type_(JSON_NUMBER), value_({ number })
+Shiny::Json::JsonValue::JsonValue(float number) : type_(JSON_NUMBER), data_({ number })
 {
 }
 
-Shiny::Json::JsonValue::JsonValue(bool boolean) : type_(JSON_BOOL), value_({ boolean })
+Shiny::Json::JsonValue::JsonValue(bool boolean) : type_(JSON_BOOLEAN), data_({ boolean })
 {
 }
 
-Shiny::Json::JsonValue::JsonValue(const char* str) : type_(JSON_STRING), value_({ str })
+Shiny::Json::JsonValue::JsonValue(char* str) : type_(JSON_STRING), data_({ str })
 {
 }
 
-Shiny::Json::JsonValue::JsonValue(const JsonObject* object) : type_(JSON_OBJECT), value_({ object })
+Shiny::Json::JsonValue::JsonValue(JsonObject* object) : type_(JSON_OBJECT), data_({ object })
 {
 }
 
 void Shiny::Json::JsonValue::Destroy()
 {
     if (type_ == JSON_STRING) {
-        delete[] value_.str;
+        delete[] data_.str;
+        std::cerr << "De-Alloc" << std::endl;
     } else if (type_ == JSON_OBJECT) {
-        delete value_.object;
+        delete data_.object;
+        std::cerr << "De-Alloc" << std::endl;
     } else if (type_ >= JSON_ARRAY) {
-        delete value_.array;
+        for (auto&& value : *(data_.array)) {
+            value.Destroy();
+        }
+        delete data_.array;
+        std::cerr << "De-Alloc" << std::endl;
     }
 }
 
 int Shiny::Json::JsonValue::AsInt() const
 {
     if (type_ == JSON_NUMBER) {
-        return static_cast<int>(value_.number);
+        return static_cast<int>(data_.number);
     }
     return 0;
+}
+
+bool Shiny::Json::JsonValue::AsBool() const
+{
+    return data_.boolean;
 }
 
 float Shiny::Json::JsonValue::AsFloat() const
 {
     if (type_ == JSON_NUMBER) {
-        return static_cast<int>(value_.number);
+        return data_.number;
     }
     return 0.0f;
 }
@@ -53,7 +64,7 @@ float Shiny::Json::JsonValue::AsFloat() const
 Shiny::Float2 Shiny::Json::JsonValue::AsFloat2() const
 {
     if (type_ == JSON_ARRAY + 2) {
-        return Float2(value_.array[0].AsFloat(), value_.array[1].AsFloat());
+        return Float2((*(data_.array))[0].AsFloat(), (*(data_.array))[1].AsFloat());
     }
     return Float2();
 }
@@ -61,7 +72,7 @@ Shiny::Float2 Shiny::Json::JsonValue::AsFloat2() const
 Shiny::Float3 Shiny::Json::JsonValue::AsFloat3() const
 {
     if (type_ == JSON_ARRAY + 3) {
-        return Float3(value_.array[0].AsFloat(), value_.array[1].AsFloat(), value_.array[2].AsFloat());
+        return Float3((*(data_.array))[0].AsFloat(), (*(data_.array))[1].AsFloat(), (*(data_.array))[2].AsFloat());
     }
     return Float3();
 }
@@ -69,7 +80,7 @@ Shiny::Float3 Shiny::Json::JsonValue::AsFloat3() const
 Shiny::Float4 Shiny::Json::JsonValue::AsFloat4() const
 {
     if (type_ == JSON_ARRAY + 4) {
-        return Float4(value_.array[0].AsFloat(), value_.array[1].AsFloat(), value_.array[2].AsFloat(), value_.array[3].AsFloat());
+        return Float4((*(data_.array))[0].AsFloat(), (*(data_.array))[1].AsFloat(), (*(data_.array))[2].AsFloat(), (*(data_.array))[3].AsFloat());
     }
     return Float4();
 }
@@ -78,10 +89,10 @@ Shiny::Matrix4x4 Shiny::Json::JsonValue::AsMatrix4x4() const
 {
     if (type_ == JSON_ARRAY + 16) {
         return Matrix4x4(
-            value_.array[0].AsFloat(), value_.array[1].AsFloat(), value_.array[2].AsFloat(), value_.array[3].AsFloat(),
-            value_.array[4].AsFloat(), value_.array[5].AsFloat(), value_.array[6].AsFloat(), value_.array[7].AsFloat(),
-            value_.array[8].AsFloat(), value_.array[9].AsFloat(), value_.array[10].AsFloat(), value_.array[11].AsFloat(),
-            value_.array[12].AsFloat(), value_.array[13].AsFloat(), value_.array[14].AsFloat(), value_.array[15].AsFloat());
+            (*(data_.array))[0].AsFloat(), (*(data_.array))[1].AsFloat(), (*(data_.array))[2].AsFloat(), (*(data_.array))[3].AsFloat(),
+            (*(data_.array))[4].AsFloat(), (*(data_.array))[5].AsFloat(), (*(data_.array))[6].AsFloat(), (*(data_.array))[7].AsFloat(),
+            (*(data_.array))[8].AsFloat(), (*(data_.array))[9].AsFloat(), (*(data_.array))[10].AsFloat(), (*(data_.array))[11].AsFloat(),
+            (*(data_.array))[12].AsFloat(), (*(data_.array))[13].AsFloat(), (*(data_.array))[14].AsFloat(), (*(data_.array))[15].AsFloat());
     }
     return Matrix4x4();
 }
@@ -92,14 +103,14 @@ std::string Shiny::Json::JsonValue::AsString() const
     case Shiny::Json::JSON_NULL:
         return std::string("null");
         break;
-    case Shiny::Json::JSON_BOOL:
-        return std::to_string(value_.boolean);
+    case Shiny::Json::JSON_BOOLEAN:
+        return std::to_string(data_.boolean);
         break;
     case Shiny::Json::JSON_NUMBER:
-        return std::to_string(value_.number);
+        return std::to_string(data_.number);
         break;
     case Shiny::Json::JSON_STRING:
-        return std::string(value_.str);
+        return std::string(data_.str);
         break;
     case Shiny::Json::JSON_OBJECT:
         return std::string("JSON_OBJECT");
@@ -114,7 +125,7 @@ std::string Shiny::Json::JsonValue::AsString() const
 const Shiny::Json::JsonValue* Shiny::Json::JsonValue::AsJsonArray() const
 {
     if (type_ >= JSON_ARRAY) {
-        return value_.array;
+        return (*(data_.array)).data();
     }
     return nullptr;
 }
@@ -122,7 +133,7 @@ const Shiny::Json::JsonValue* Shiny::Json::JsonValue::AsJsonArray() const
 const Shiny::Json::JsonObject* Shiny::Json::JsonValue::AsJsonObject() const
 {
     if (type_ == JSON_OBJECT) {
-        return value_.object;
+        return data_.object;
     }
     return nullptr;
 }
@@ -134,7 +145,7 @@ Shiny::Json::JsonObject::~JsonObject()
     }
 }
 
-Shiny::Json::JsonValue& Shiny::Json::JsonObject::GetValue(const std::string& key)
+const Shiny::Json::JsonValue& Shiny::Json::JsonObject::GetValue(const std::string& key) const
 {
     auto valueIter = valueTable_.find(key);
     if (valueIter != valueTable_.end()) {
@@ -155,8 +166,9 @@ Shiny::Json::Parser::Parser(JsonObject* jsonObject, const char* json, const size
     SkipSpacesAndComments();
     if (ch_ != '{') {
         hasError_ = true;
+    } else {
+        ParseObject(jsonObject);
     }
-    ParseObject(jsonObject);
 }
 
 bool Shiny::Json::Parser::HasError()
@@ -177,10 +189,11 @@ bool Shiny::Json::Parser::Forward()
     }
     offset_++;
     if (offset_ >= length_) {
+        ch_ = '\0';
         return false;
     }
     ch_ = json_[offset_];
-    if (ch_ == 0) {
+    if (ch_ == '\0') {
         hasError_ = true;
         return false;
     }
@@ -224,8 +237,12 @@ void Shiny::Json::Parser::SkipSpacesAndComments()
     }
 }
 
-bool Shiny::Json::Parser::ParseObject(JsonObject* object)
+void Shiny::Json::Parser::ParseObject(JsonObject* object)
 {
+    if (ch_ != '{') {
+        hasError_ = true;
+        return;
+    }
     while (Forward() && ch_ != '}') {
         SkipSpacesAndComments();
         if (ch_ == '"') {
@@ -233,27 +250,178 @@ bool Shiny::Json::Parser::ParseObject(JsonObject* object)
             if (hasError_) {
                 break;
             }
-            if (jsonObject_->valueTable_.find(key) != jsonObject_->valueTable_.end()) {
+            if (object->valueTable_.find(key) != object->valueTable_.end()) {
                 hasError_ = true;
                 break;
             }
             SkipSpacesAndComments();
             if (ch_ == ':') {
-                Forward();
-                SkipSpacesAndComments();
-                auto str = ParseString();
-                if (hasError_) {
-                    break;
+                if (Forward()) {
+                    SkipSpacesAndComments();
+                    JsonValue value;
+                    ParseValue(value);
+                    if (hasError_) {
+                        break;
+                    }
+                    object->valueTable_.emplace(std::make_pair(key, value));
+                    SkipSpacesAndComments();
+                    if (ch_ == ',') {
+                        // parse next value then
+                    } else if (ch_ == '}') {
+                        Forward();
+                        break;
+                    } else {
+                        hasError_ = true;
+                        break;
+                    }
                 } else {
-                    char* value = new char[str.length() + 1];
-                    str.copy(value, str.length());
-                    value[str.length()] = '\0';
-                    jsonObject_->valueTable_.emplace(std::make_pair(key, JsonValue(value)));
+                    hasError_ = true;
+                    break;
+                }
+            } else {
+                hasError_ = true;
+                break;
+            }
+        } else {
+            hasError_ = true;
+            break;
+        }
+    }
+}
+
+void Shiny::Json::Parser::ParseBoolean(JsonValue& value)
+{
+    if (ch_ == 't') {
+        if (Forward() && ch_ == 'r') {
+            if (Forward() && ch_ == 'u') {
+                if (Forward() && ch_ == 'e') {
+                    value.type_ = JSON_BOOLEAN;
+                    value.data_.boolean = true;
+                    Forward();
+                    return;
+                }
+            }
+        }
+    } else if (ch_ == 'f') {
+        if (Forward() && ch_ == 'a') {
+            if (Forward() && ch_ == 'l') {
+                if (Forward() && ch_ == 's') {
+                    if (Forward() && ch_ == 'e') {
+                        value.type_ = JSON_BOOLEAN;
+                        value.data_.boolean = false;
+                        Forward();
+                        return;
+                    }
                 }
             }
         }
     }
-    return false;
+    hasError_ = true;
+}
+
+void Shiny::Json::Parser::ParseValue(JsonValue& value)
+{
+    if (ch_ == '"') {
+        auto str = ParseString();
+        if (hasError_) {
+            return;
+        } else {
+            std::cerr << "Alloc" << std::endl;
+            char* data = new char[str.length() + 1];
+            str.copy(data, str.length());
+            data[str.length()] = '\0';
+            value.data_.str = data;
+            value.type_ = JSON_STRING;
+        }
+    } else if (ch_ == '-' || ch_ == '+' || std::isdigit(ch_)) {
+        ParseNumber(value);
+    } else if (ch_ == 't' || ch_ == 'f') {
+        ParseBoolean(value);
+    } else if (ch_ == '[') {
+        ParseArray(value);
+    } else if (ch_ == '{') {
+        JsonObject* object = new JsonObject;
+        std::cerr << "Alloc" << std::endl;
+        ParseObject(object);
+        value.type_ = JSON_OBJECT;
+        value.data_.object = object;
+    }
+}
+
+void Shiny::Json::Parser::ParseNumber(JsonValue& value)
+{
+    size_t begin = offset_;
+    if (ch_ == '-' || ch_ == '+') {
+        Forward();
+    }
+    if (ch_ > '0' && ch_ <= '9') {
+        while (Forward() && std::isdigit(ch_)) {}
+    } else {
+        Forward();
+    }
+    if (ch_ == '.') {
+        while (Forward() && std::isdigit(ch_)) {}
+    }
+    if (ch_ == 'e' || ch_ == 'E') {
+        if (Forward()) {
+            if (ch_ != '+' && ch_ != '-' && !std::isdigit(ch_)) {
+                hasError_ = true;
+                return;
+            }
+            while (Forward() && std::isdigit(ch_)) {}
+        }
+    }
+    value.data_.number = std::stof(std::string(json_ + begin, json_ + offset_));
+    value.type_ = JSON_NUMBER;
+}
+
+void Shiny::Json::Parser::ParseArray(JsonValue& value)
+{
+    if (ch_ != '[') {
+        hasError_ = true;
+        return;
+    }
+    Forward();
+    SkipSpacesAndComments();
+    std::cerr << "Alloc" << std::endl;
+    std::vector<JsonValue>* array = new std::vector<JsonValue>();
+    while (ch_ != ']') {
+        array->emplace_back();
+        ParseValue(array->back());
+        if (hasError_) {
+            break;
+        }
+        SkipSpacesAndComments();
+        if (ch_ == ',') {
+            if (Forward()) {
+                SkipSpacesAndComments();
+            } else {
+                hasError_ = true;
+                break;
+            }
+        } else if (ch_ != ']') {
+            hasError_ = true;
+            break;
+        }
+    }
+    if (hasError_) {
+        for (auto&& value : *array) {
+            value.Destroy();
+        }
+        delete array;
+        std::cerr << "De-Alloc" << std::endl;
+    } else {
+        if (array->empty()) {
+            delete array;
+            std::cerr << "De-Alloc" << std::endl;
+            value.type_ = JSON_NULL;
+            value.data_.array = nullptr;
+        } else {
+            Forward();
+            value.type_ = static_cast<ValueType>(JSON_ARRAY + array->size());
+            value.data_.array = array;
+        }
+    }
 }
 
 std::pair<size_t, size_t> Shiny::Json::Parser::FindStringRange()
@@ -297,9 +465,4 @@ std::string Shiny::Json::Parser::ParseString()
     }
     hasError_ = true;
     return "";
-}
-
-float Shiny::Json::Parser::ParseNumber()
-{
-    return 0.0f;
 }

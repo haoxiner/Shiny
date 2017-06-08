@@ -151,12 +151,7 @@ const Shiny::Json::JsonValue& Shiny::Json::JsonObject::GetValue(const std::strin
     if (valueIter != valueTable_.end()) {
         return valueIter->second;
     }
-    return JsonValue();
-}
-
-bool Shiny::Json::Parse(JsonObject& jsonObject, const char* json, const size_t length)
-{
-    return false;
+    return JsonValue::NULL_OBJECT;
 }
 
 Shiny::Json::Parser::Parser(JsonObject* jsonObject, const char* json, const size_t length)
@@ -165,15 +160,27 @@ Shiny::Json::Parser::Parser(JsonObject* jsonObject, const char* json, const size
     ch_ = json_[0];
     SkipSpacesAndComments();
     if (ch_ != '{') {
-        hasError_ = true;
+        SubmitError();
     } else {
         ParseObject(jsonObject);
     }
 }
 
+void Shiny::Json::Parser::SubmitError()
+{
+    if (!hasError_) {
+        hasError_ = true;
+        errorMessage_ += "Error Around Row: " + std::to_string(row_) + ", column: " + std::to_string(column_);
+    }
+}
 bool Shiny::Json::Parser::HasError()
 {
     return hasError_;
+}
+
+std::string Shiny::Json::Parser::GetErrorMessage() const
+{
+    return errorMessage_;
 }
 
 bool Shiny::Json::Parser::Forward()
@@ -194,7 +201,7 @@ bool Shiny::Json::Parser::Forward()
     }
     ch_ = json_[offset_];
     if (ch_ == '\0') {
-        hasError_ = true;
+        SubmitError();
         return false;
     }
     return true;
@@ -240,7 +247,7 @@ void Shiny::Json::Parser::SkipSpacesAndComments()
 void Shiny::Json::Parser::ParseObject(JsonObject* object)
 {
     if (ch_ != '{') {
-        hasError_ = true;
+        SubmitError();
         return;
     }
     while (Forward() && ch_ != '}') {
@@ -251,7 +258,7 @@ void Shiny::Json::Parser::ParseObject(JsonObject* object)
                 break;
             }
             if (object->valueTable_.find(key) != object->valueTable_.end()) {
-                hasError_ = true;
+                SubmitError();
                 break;
             }
             SkipSpacesAndComments();
@@ -271,19 +278,19 @@ void Shiny::Json::Parser::ParseObject(JsonObject* object)
                         Forward();
                         break;
                     } else {
-                        hasError_ = true;
+                        SubmitError();
                         break;
                     }
                 } else {
-                    hasError_ = true;
+                    SubmitError();
                     break;
                 }
             } else {
-                hasError_ = true;
+                SubmitError();
                 break;
             }
         } else {
-            hasError_ = true;
+            SubmitError();
             break;
         }
     }
@@ -316,7 +323,7 @@ void Shiny::Json::Parser::ParseBoolean(JsonValue& value)
             }
         }
     }
-    hasError_ = true;
+    SubmitError();
 }
 
 void Shiny::Json::Parser::ParseValue(JsonValue& value)
@@ -365,7 +372,7 @@ void Shiny::Json::Parser::ParseNumber(JsonValue& value)
     if (ch_ == 'e' || ch_ == 'E') {
         if (Forward()) {
             if (ch_ != '+' && ch_ != '-' && !std::isdigit(ch_)) {
-                hasError_ = true;
+                SubmitError();
                 return;
             }
             while (Forward() && std::isdigit(ch_)) {}
@@ -378,7 +385,7 @@ void Shiny::Json::Parser::ParseNumber(JsonValue& value)
 void Shiny::Json::Parser::ParseArray(JsonValue& value)
 {
     if (ch_ != '[') {
-        hasError_ = true;
+        SubmitError();
         return;
     }
     Forward();
@@ -396,11 +403,11 @@ void Shiny::Json::Parser::ParseArray(JsonValue& value)
             if (Forward()) {
                 SkipSpacesAndComments();
             } else {
-                hasError_ = true;
+                SubmitError();
                 break;
             }
         } else if (ch_ != ']') {
-            hasError_ = true;
+            SubmitError();
             break;
         }
     }
@@ -424,30 +431,10 @@ void Shiny::Json::Parser::ParseArray(JsonValue& value)
     }
 }
 
-std::pair<size_t, size_t> Shiny::Json::Parser::FindStringRange()
-{
-    SkipSpacesAndComments();
-    if (ch_ != '"') {
-        hasError_ = true;
-        return std::pair<size_t, size_t>(0, 0);
-    }
-    auto begin = offset_;
-    auto end = begin;
-    while (end < length_ && json_[end] != '"') {
-        end++;
-    }
-    if (end < length_ && json_[end] == '"') {
-        end++;
-        return std::pair<size_t, size_t>(begin, end);
-    }
-    hasError_ = true;
-    return std::pair<size_t, size_t>(0, 0);
-}
-
 std::string Shiny::Json::Parser::ParseString()
 {
     if (ch_ != '"') {
-        hasError_ = true;
+        SubmitError();
         return "";
     }
     auto begin = offset_;
@@ -463,6 +450,6 @@ std::string Shiny::Json::Parser::ParseString()
         }
         return std::string(json_ + begin + 1, json_ + end - 1);
     }
-    hasError_ = true;
+    SubmitError();
     return "";
 }

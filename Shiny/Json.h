@@ -38,6 +38,7 @@ public:
     std::string AsString() const;
     const JsonValue* AsJsonArray() const;
     const JsonObject* AsJsonObject() const;
+    static const JsonValue NULL_OBJECT;
 private:
     union Value
     {
@@ -53,14 +54,15 @@ private:
     };
     Value data_ = { false };
     ValueType type_ = JSON_NULL;
-    static const JsonValue NULL_OBJECT;
 };
 class Parser
 {
 public:
     Parser(JsonObject* jsonObject, const char* json, const size_t length);
     bool HasError();
+    std::string GetErrorMessage() const;
 private:
+    void SubmitError();
     bool Forward();
     void Forward(size_t count);
     bool SkipSpaces();
@@ -72,8 +74,6 @@ private:
     void ParseValue(JsonValue& value);
     void ParseNumber(JsonValue& value);
     void ParseArray(JsonValue& value);
-
-    std::pair<size_t, size_t> FindStringRange();
     std::string ParseString();
 
     const char* json_ = nullptr;
@@ -82,6 +82,7 @@ private:
     JsonObject* jsonObject_;
     char ch_ = 0;
     bool hasError_ = false;
+    std::string errorMessage_;
     bool finish_ = false;
     size_t row_ = 1;
     size_t column_ = 1;
@@ -95,13 +96,5 @@ public:
 private:
     std::map<std::string, JsonValue> valueTable_;
 };
-//class JsonArray
-//{
-//public:
-//    JsonValue& operator[](int i);
-//private:
-//    std::vector<JsonValue> array_;
-//};
-bool Parse(JsonObject& jsonObject, const char* json, const size_t length);
 }
 }

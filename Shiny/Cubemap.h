@@ -6,7 +6,7 @@ namespace Shiny
 class Cubemap
 {
 public:
-    Cubemap(const std::string& name, const std::string& prefix, bool enableMipmap, bool isInverted = false);
+    //Cubemap(const std::string& name, const std::string& prefix, bool enableMipmap, bool isInverted = false);
     Cubemap(const std::string& directory, const std::string& fileID);
     ~Cubemap();
     void BindTextureUint(int unit) const;

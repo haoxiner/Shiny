@@ -34,7 +34,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/Model/sphere.obj", mesh);
+    ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", mesh);
     //mesh.LoadVertexAttribute(0, 4, true, positions);
     //mesh.LoadVertexAttribute(1, 4, true, normals);
     //mesh.LoadIndices(indices);
@@ -71,7 +71,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glBindSampler(5, materialSamplerID_);
     
     {
-        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/dfg.exr");
+        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/Environment/dfg.exr");
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
         std::cerr << w << "," << h << std::endl;
@@ -83,7 +83,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         glBindTextureUnit(1, dfgTexture_);
     }
     {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/metalweapon/basecolor.png");
+        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/Material/bronze_copper/basecolor.exr");
         //FreeImage_AdjustGamma(dib, 2.2);
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
@@ -91,26 +91,26 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         std::cerr << w << "," << h <<  ", bpp: " << bpp << std::endl;
         auto bits = FreeImage_GetBits(dib);
         glCreateTextures(GL_TEXTURE_2D, 1, &baseColorMapID_);
-        glTextureStorage2D(baseColorMapID_, 1, GL_RGB8, w, h);
-        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, bits);
+        glTextureStorage2D(baseColorMapID_, 1, GL_RGB16F, w, h);
+        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, bits);
         FreeImage_Unload(dib);
         glBindTextureUnit(3, baseColorMapID_);
     }
     {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/metalweapon/roughness.png");
+        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/Material/bronze_copper/roughness.exr");
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
         auto bpp = FreeImage_GetBPP(dib);
         std::cerr << w << "," << h << ", bpp: " << bpp << std::endl;
         auto bits = FreeImage_GetBits(dib);
         glCreateTextures(GL_TEXTURE_2D, 1, &roughnessMapID_);
-        glTextureStorage2D(roughnessMapID_, 1, GL_R8, w, h);
-        glTextureSubImage2D(roughnessMapID_, 0, 0, 0, w, h, GL_RED, GL_UNSIGNED_BYTE, bits);
+        glTextureStorage2D(roughnessMapID_, 1, GL_R16F, w, h);
+        glTextureSubImage2D(roughnessMapID_, 0, 0, 0, w, h, GL_RED, GL_FLOAT, bits);
         FreeImage_Unload(dib);
         glBindTextureUnit(4, roughnessMapID_);
     }
     {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/metalweapon/metallic.png");
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/carmetal/metallic.png");
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
         auto bpp = FreeImage_GetBPP(dib);
@@ -124,9 +124,9 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     }
     //cubemap
     {
-        specularCubemap_ = new Cubemap("../../Resources/Environment/pisa", "pisa_specular");
+        specularCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_specular");
         specularCubemap_->BindTextureUint(2);
-        diffuseCubemap_ = new Cubemap("../../Resources/Environment/pisa", "pisa_diffuse");
+        diffuseCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_diffuse");
         diffuseCubemap_->BindTextureUint(0);
     }
     return true;
@@ -166,7 +166,7 @@ void Shiny::Game::Render()
         for (int i = 0; i <= meshCount; i++) {
             auto smoothness = 1.0f - i / (float)meshCount;
             //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0,-0, -5)) * MakeScaleMatrix(2.0, 2.0, 2.0) * QuaternionToMatrix(Normalize(quat));// ;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0,-2, -8)) * MakeScaleMatrix(2.0, 2.0, 2.0) * QuaternionToMatrix(Normalize(quat));// ;
             perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             mesh.Render();

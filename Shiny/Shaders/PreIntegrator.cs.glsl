@@ -25,6 +25,10 @@ float Saturate(float value)
 {
 	return clamp(value, 0.0, 1.0);
 }
+vec2 Saturate(vec2 value)
+{
+	return vec2(Saturate(value.x), Saturate(value.y));
+}
 
 // tell if a==b
 bool FloatEqual(float a, float b)
@@ -175,10 +179,10 @@ void ImportanceSampleCosDir(
 }
 
 // return micro-surface normal of GGX
-// note: roughness is perceptually linear roughness
-vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N, LocalFrame referential)
+vec3 ImportanceSampleGGX(vec2 Xi, float alphaG, vec3 N, LocalFrame referential)
 {
-	float a = Roughness * Roughness;
+	// float a = Roughness * Roughness;
+	float a = alphaG;
 	float Phi = 2 * M_PI * Xi.x;
 	float CosTheta = sqrt( (1 - Xi.y) / ( 1 + (a*a - 1) * Xi.y ) );
 	float SinTheta = sqrt( 1 - CosTheta * CosTheta );
@@ -191,33 +195,34 @@ vec3 ImportanceSampleGGX(vec2 Xi, float Roughness, vec3 N, LocalFrame referentia
 }
 
 // calculate micro-surface reflection L,H according to V,N
-void ImportanceSampleGGXDir(in vec2 Xi, in vec3 V, in vec3 N, in float Roughness, out vec3 H, out vec3 L)
+void ImportanceSampleGGXDir(in vec2 Xi, in vec3 V, in vec3 N, in float alphaG, out vec3 H, out vec3 L)
 {
 	LocalFrame referential = CreateLocalFrame(N);
-	H = ImportanceSampleGGX(Xi, Roughness, N, referential);
+	H = ImportanceSampleGGX(Xi, alphaG, N, referential);
 	L = 2 * dot( V, H ) * H - V;
 }
 
 // G: bidirectional shadowing masking
 void ImportanceSampleGGX_G(
 	in vec2 u, in vec3 V, in vec3 N,
-	in LocalFrame referential, in float roughness,
+	in LocalFrame referential, in float alphaG,
 	out float NdotH, out float LdotH, out vec3 L, out float G)
 {
-	vec3 H = ImportanceSampleGGX(u, roughness, N, referential);
+	vec3 H = ImportanceSampleGGX(u, alphaG, N, referential);
 	L = 2 * dot( V, H ) * H - V;
 	NdotH = Saturate(dot(N, H));
 	LdotH = Saturate(dot(L, H));
 	float NdotL = Saturate(dot(N, L));
 	float NdotV = Saturate(dot(N, V)); 
-	G = G_SmithGGXCorrelated(NdotL, NdotV, roughness);
+	G = G_SmithGGXCorrelated(NdotL, NdotV, alphaG);
 }
 
 // DFG: the brdf part of the split sum
 vec4 IntegrateDFGOnly(
 	in vec3 V,
 	in vec3 N,
-	in float roughness)
+	in float roughness,
+	in float alphaG)
 {
 	float NdotV = Saturate(dot(N, V));
 	vec4 acc = vec4(0.0);
@@ -232,7 +237,7 @@ vec4 IntegrateDFGOnly(
 		float LdotH = 0;
 		float G = 0;
 		// See [Karis13] for implementation
-		ImportanceSampleGGX_G(u, V, N, referential , roughness , NdotH , LdotH , L, G);
+		ImportanceSampleGGX_G(u, V, N, referential, alphaG, NdotH , LdotH , L, G);
 		// specular GGX DFG preIntegration
 		float NdotL = Saturate(dot(N, L));
 		if (NdotL > 0 && G > 0.0)
@@ -252,7 +257,7 @@ vec4 IntegrateDFGOnly(
 		{
 			float LdotH = Saturate(dot(L, normalize(V + L)));
 			float NdotV = Saturate(dot(N, V));
-			acc.z += Fr_DisneyDiffuse(NdotV , NdotL , LdotH , sqrt(roughness));
+			acc.z += Fr_DisneyDiffuse(NdotV , NdotL , LdotH , roughness);
 		}
 		accWeight += 1.0;
 	}
@@ -285,12 +290,13 @@ vec3 IntegrateCubeLDOnly(
 {
 	vec3 accBrdf = vec3(0);
 	float accBrdfWeight = 0;
+	float alphaG = roughness * roughness;
 	for (uint i=0; i<NUM_OF_SAMPLES; ++i)
 	{
 		vec2 eta = GetSample(i, NUM_OF_SAMPLES);
 		vec3 L;
 		vec3 H;
-		ImportanceSampleGGXDir(eta, V, N, roughness , H, L);
+		ImportanceSampleGGXDir(eta, V, N, alphaG , H, L);
 		float NdotL = dot(N,L);
 		if (NdotL >0)
 		{
@@ -381,26 +387,33 @@ vec3 CubeFaceTexCoordToDirection(vec2 uv, uint face)
 
 void main()
 {
-	vec2 outputTexCoord = (vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / OUPUT_SIZE;
 	vec4 outputColor = vec4(0.0);
+	
 	#ifdef INTEGRATE_DFG
+	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy)) / (OUPUT_SIZE - vec2(1.0)));
 	float NdotV = outputTexCoord.x;
-	float roughness = outputTexCoord.y;
+	float alphaG = outputTexCoord.y;
+	float roughness = sqrt(alphaG);
 	vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0, NdotV);
-	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness);
+	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness, alphaG);
+	
 	#elif defined (INTEGRATE_SPECULAR)
+	// Cubemap interplated at the seam, so we use bias 0.5
+	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / (OUPUT_SIZE));
 	vec3 direction = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	// level/maxLevel = sqrt(linearRoughness)
 	// roughness = linearRoughness * linearRoughness
 	// GGX alpha = roughness = pow(level/maxlevel, 4.0)
-	// float roughness = pow(inputArg1.y / inputArg1.z, 4.0);
-	// Above is Frostbite version. we map level/maxLevel = linearRoughness
-	float linearRoughness = pow(inputArg1.y / inputArg1.z, 4.0);
-	// float roughness = linearRoughness * linearRoughness;
-	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, linearRoughness);
+	float roughness = pow(inputArg1.y / inputArg1.z, 2.0);
+	// float alphaG = roughness * roughness;
+	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, roughness);
+	
 	#elif defined (INTEGRATE_DIFFUSE)
+	// Cubemap interplated at the seam, so we use bias 0.5
+	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / (OUPUT_SIZE));
 	vec3 n = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	outputColor = IntegrateDiffuseCube(n);
 	#endif
+	
 	imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), outputColor);
 }

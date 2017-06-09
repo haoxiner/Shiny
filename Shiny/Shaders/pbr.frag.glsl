@@ -51,12 +51,12 @@ vec3 GetDiffuseDominantDir(vec3 N, vec3 V, float NdotV , float roughness)
 	return mix(N, V, lerpFactor);
 }
 
-vec3 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float roughness)
+vec3 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float alphaG)
 {
 	// vec3 dominantN = GetDiffuseDominantDir(N, V, NdotV , roughness);
 	vec3 dominantN = N;
 	vec3 diffuseLighting = texture(diffuseEnvmap, dominantN).xyz;
-	float diffF = texture(dfgMap, vec2(NdotV , roughness)).z;
+	float diffF = texture(dfgMap, vec2(NdotV , alphaG)).z;
 	return diffuseLighting * diffF;
 }
 // We have a better approximation of the off specular peak
@@ -83,16 +83,17 @@ vec3 GetSpecularDominantDir(vec3 N, vec3 R, float NdotV , float roughness)
 }
 float LinearRoughnessToMipLevel(float linearRoughness, float maxMipLevel)
 {
-	// return sqrt(linearRoughness) * maxMipLevel;
-	return linearRoughness * maxMipLevel;
+	return sqrt(linearRoughness) * maxMipLevel;
+	// return linearRoughness * maxMipLevel;
 }
-vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0, vec3 f90)
+vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float alphaG, float roughness, vec3 f0, vec3 f90)
 {
-	float linearRoughness = sqrt(roughness);
-
 	// vec3 R = 2 * dot( V, N ) * N - V;
 	vec3 R = reflect(-V, N);
-	vec3 dominantR = GetSpecularDominantDir(N, R, linearRoughness);
+	vec3 dominantR = GetSpecularDominantDir(N, R, alphaG);
+	// if (material0.z == 0.0) {
+	// 	dominantR = R;
+	// }
 	// vec3 dominantR = GetSpecularDominantDir(N, R, linearRoughness);
 
 	// Rebuild the function
@@ -103,7 +104,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0,
 
 	float mipCount = 5;
 	
-	float mipLevel = LinearRoughnessToMipLevel(linearRoughness , mipCount);
+	float mipLevel = LinearRoughnessToMipLevel(roughness , mipCount);
 	vec3 preLD = textureLod(specularEnvmap , dominantR , mipLevel).rgb;
 	// vec3 preLD = SamplePanorama(specularEnvmap, dominantR).xyz;
 
@@ -112,7 +113,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0,
 	// PreIntegratedDFG.r = Gv.(1-Fc)
 	// PreIntegratedDFG.g = Gv.Fc
 	// vec2 preDFG = DFG.SampleLevel(sampler , float2(NdotV , roughness), 0).xy;
-	vec2 preDFG = texture(dfgMap, vec2(NdotV, roughness)).xy;
+	vec2 preDFG = texture(dfgMap, vec2(NdotV, alphaG)).xy;
 
 	// LD . ( f0.Gv.(1-Fc) + Gv.Fc.f90 )
 	return preLD * (f0 * preDFG.x + f90 * preDFG.y);
@@ -171,18 +172,18 @@ void main()
 	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
 	
-	vec2 uv = texCoord * 1.0;
+	vec2 uv = texCoord * 4.0;
 
-	float linearRoughness = pow(texture(roughnessMap, uv).r, 2.2);
-	float roughness = linearRoughness * linearRoughness;
-	// roughness = 0.2;
-	float metallic = pow(texture(metallicMap, uv).r, 2.2);
-	// float metallic = 0;
+	float roughness = texture(roughnessMap, uv).r;
+	float alphaG = roughness * roughness;
+	float metallic = texture(metallicMap, uv).r;
+	metallic = 1.0;
 	// metallic = material0.y;
-	// roughness = pow(1.0 - material0.x, 2.0);
+	// roughness = 1.0 - material0.x;
+	// alphaG = roughness * roughness;
 	
 
-	vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb);
+	vec3 baseColor = texture(baseColorMap, uv).rgb;
 	// baseColor = vec3(1.0);
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
@@ -192,14 +193,12 @@ void main()
 
 
 	float NdotV = dot(N, V);
-	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90);
-	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);
+	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, alphaG, roughness, f0, f90);
+	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, alphaG);
 	fragColor.xyz = diffuse + specular;
-	float exposure = 1.0;
+	float exposure = 1.5;
 	fragColor *= exposure;
-	// fragColor.xyz = TonemapUncharted2(fragColor.xyz);
+	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
-
-	fragColor.xyz = ApproximationLinearToSRGB(vec3(linearRoughness));
 }

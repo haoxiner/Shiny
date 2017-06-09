@@ -40,7 +40,7 @@ void Shiny::PreIntegrator::IntegrateIBLDFG(const std::string& fileID, const std:
     glDeleteBuffers(1, &argsBufferID);
 
     // write to file
-    Save(outputTextureID, outputPath + "/" + fileID + "_dfg.exr", outputWidth, outputWidth, false, false);
+    Save(outputTextureID, outputPath + "/" + fileID + ".exr", outputWidth, outputWidth, false, false);
     glDeleteTextures(1, &outputTextureID);
 }
 
@@ -50,7 +50,7 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
                                                           const std::string& outputID)
 {
     const int diffuseOutputWidth = 64;
-    const int samplesPerPixel = 1024;
+    const int samplesPerPixel = 1024 * 4;
 
     const std::string FACE_NAME[] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
     // arguments buffer

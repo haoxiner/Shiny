@@ -51,21 +51,6 @@ void GPUwait()
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
     glDeleteSync(syncObject);
 }
-//void TestPreComputation()
-//{
-//    constexpr int xResolution = 800;
-//    constexpr int yResolution = 600;
-//    Shiny::Display display;
-//    if (!display.Startup(xResolution, yResolution, false)) {
-//        return;
-//    }
-//    Shiny::PreComputation preComputation;
-//    //preComputation.LoadSourceFile("../../uffizi.exr");
-//    preComputation.ComputeIBLDFG("../../output/dfg.exr");
-//    preComputation.LoadSourceFile("pisa");
-//    preComputation.ComputeIBLDiffuse("../../output/pisa_diffuse");
-//    preComputation.ComputeIBLSpecular("../../output/pisa_specular");
-//}
 
 void TestPreIntegrator()
 {
@@ -77,8 +62,8 @@ void TestPreIntegrator()
     }
     
     Shiny::PreIntegrator preIntegrator;
-    //preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
-    preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
+    preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
+    //preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
 }
 int main()
 {

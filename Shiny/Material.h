@@ -13,7 +13,7 @@ public:
     };
     Material(const std::string& name);
     ~Material();
-    void Bind();
+    void Use();
 private:
     std::vector<GLuint> textureIDList_;
 };

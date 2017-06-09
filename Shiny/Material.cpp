@@ -10,9 +10,9 @@ Shiny::Material::Material(const std::string& name)
 
     Json::JsonObject config;
     Json::Parser parser(&config, ResourceManager::ReadFileToString(directory + "/material.json"));
-    
     std::string type = config.GetValue("type").AsString();
     std::cerr << type << std::endl;
+
     const std::string dataList[] = { "basecolor.exr", "roughness.exr" };
     const GLenum dataTypeList[] = { GL_RGB16F, GL_R16F };
     for (int i = 0; i < 2; i++) {
@@ -55,7 +55,7 @@ Shiny::Material::~Material()
     glDeleteTextures(textureIDList_.size(), textureIDList_.data());
 }
 
-void Shiny::Material::Bind()
+void Shiny::Material::Use()
 {
     for (int i = 0; i < textureIDList_.size(); i++) {
         glBindTextureUnit(3 + i, textureIDList_[i]);

@@ -45,12 +45,8 @@ private:
         NUM_OF_CONSTANT_BUFFER
     };
     std::vector<GLuint> constantBufferList_;
-    GLuint baseColorMapID_;
-    GLuint roughnessMapID_;
-    GLuint metallicMapID_;
     GLuint dfgTexture_;
     GLuint samplerID_;
-    GLuint specularSamplerID_;
     Cubemap* specularCubemap_;
     Cubemap* diffuseCubemap_;
     GLuint materialSamplerID_;

@@ -114,6 +114,18 @@
     <ClInclude Include="Material.h">
       <Filter>RenderEngine</Filter>
     </ClInclude>
+    <ClInclude Include="MasterRenderer.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchOfStaticEntity.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchOfAnimatedEntity.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchOfStationaryEntity.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -180,6 +192,9 @@
       <Filter>Util</Filter>
     </ClCompile>
     <ClCompile Include="Material.cpp">
+      <Filter>RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="MasterRenderer.cpp">
       <Filter>RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>

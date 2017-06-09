@@ -388,9 +388,12 @@ vec3 CubeFaceTexCoordToDirection(vec2 uv, uint face)
 void main()
 {
 	vec4 outputColor = vec4(0.0);
+
+	// bias 0.5, both for dfg(90 degree not include) and cubemap(avoid seams)
+	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / (OUPUT_SIZE));
+	vec3 direction = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	
 	#ifdef INTEGRATE_DFG
-	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy)) / (OUPUT_SIZE - vec2(1.0)));
 	float NdotV = outputTexCoord.x;
 	float alphaG = outputTexCoord.y;
 	float roughness = sqrt(alphaG);
@@ -398,19 +401,15 @@ void main()
 	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness, alphaG);
 	
 	#elif defined (INTEGRATE_SPECULAR)
-	// Cubemap interplated at the seam, so we use bias 0.5
-	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / (OUPUT_SIZE));
-	vec3 direction = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
-	// level/maxLevel = sqrt(linearRoughness)
-	// roughness = linearRoughness * linearRoughness
-	// GGX alpha = roughness = pow(level/maxlevel, 4.0)
-	float roughness = pow(inputArg1.y / inputArg1.z, 2.0);
-	// float alphaG = roughness * roughness;
+	// we call linearRoughness as roughness
+	// level/maxLevel = sqrt(roughness)
+	// roughness = pow(level/maxlevel, 2.0)
+	// GGX alpha = roughness * roughness = pow(level/maxlevel, 4.0)
+	float sqrtRoughness = inputArg1.y / inputArg1.z;
+	float roughness = sqrtRoughness * sqrtRoughness;
 	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, roughness);
 	
 	#elif defined (INTEGRATE_DIFFUSE)
-	// Cubemap interplated at the seam, so we use bias 0.5
-	vec2 outputTexCoord = Saturate((vec2(gl_GlobalInvocationID.xy) + vec2(0.5)) / (OUPUT_SIZE));
 	vec3 n = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	outputColor = IntegrateDiffuseCube(n);
 	#endif

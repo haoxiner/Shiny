@@ -13,32 +13,10 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     renderingSystem_.DisableCullFace();
     renderingSystem_.SetViewport(0, 0, xResolution, yResolution);
     glClearColor(0.0, 0.0, 0.0, 1.0);
-    // Load Meshes
-    std::vector<short> positions = {
-        MapToShort(1.0f), MapToShort(1.0f), MapToShort(0.0f), MapToShort(1.0f),
-        MapToShort(-1.0f), MapToShort(1.0f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(-1.0f), MapToShort(-1.0f), MapToShort(0.0f), MapToShort(0.0f),
-        MapToShort(1.0f), MapToShort(-1.0f), MapToShort(0.0f), MapToShort(1.0f)
-    };
-    std::vector<short> normals = {
-        MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(1.0f),
-        MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(1.0f),
-        MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(0.0f),
-        MapToShort(0.0f), MapToShort(0.0f), MapToShort(1.0f), MapToShort(0.0f)
-    };
-    std::vector<float> fnormals = {
-        0.0f, 0.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f
-    };
-    std::vector<unsigned int> indices = { 0,1,2, 0,2,3 };
+
     meshes_.emplace_back(2);
     auto&& mesh = meshes_.back();
     ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", mesh);
-    //mesh.LoadVertexAttribute(0, 4, true, positions);
-    //mesh.LoadVertexAttribute(1, 4, true, normals);
-    //mesh.LoadIndices(indices);
 
     // Shader Program
     shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
@@ -60,7 +38,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindSampler(1, samplerID_);
+    glBindSampler(0, samplerID_);
 
     glCreateSamplers(1, &materialSamplerID_);
     glSamplerParameteri(materialSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -81,15 +59,15 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         glTextureStorage2D(dfgTexture_, 1, GL_RGB16F, w, h);
         glTextureSubImage2D(dfgTexture_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
         FreeImage_Unload(dib);
-        glBindTextureUnit(1, dfgTexture_);
+        glBindTextureUnit(0, dfgTexture_);
     }
     bronzeMetal_ = new Material("bronze_copper");
-    bronzeMetal_->Bind();
+    bronzeMetal_->Use();
     //cubemap
+    diffuseCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_diffuse");
+    diffuseCubemap_->BindTextureUint(1);
     specularCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_specular");
     specularCubemap_->BindTextureUint(2);
-    diffuseCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_diffuse");
-    diffuseCubemap_->BindTextureUint(0);
     return true;
 }
 

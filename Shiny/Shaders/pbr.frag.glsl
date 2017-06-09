@@ -17,13 +17,14 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 	mat4 modelToWorld;
 	vec4 material0;
 };
-layout(binding = 0) uniform samplerCube diffuseEnvmap;
-layout(binding = 1) uniform sampler2D dfgMap;
+
+layout(binding = 0) uniform sampler2D dfgMap;
+layout(binding = 1) uniform samplerCube diffuseEnvmap;
 layout(binding = 2) uniform samplerCube specularEnvmap;
+
 layout(binding = 3) uniform sampler2D baseColorMap;
 layout(binding = 4) uniform sampler2D roughnessMap;
 layout(binding = 5) uniform sampler2D metallicMap;
-// layout(binding = 3) uniform samplerCube cubemap;
 
 float Saturate(float value)
 {
@@ -179,10 +180,10 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	// metallic = material0.y;
-	// roughness = 1.0 - material0.x;
-	// alphaG = roughness * roughness;
-	// baseColor = vec3(1.0, 0.0, 0.0);
+	metallic = 1.0;//material0.y;
+	roughness = 0.02;
+	alphaG = roughness * roughness;
+	baseColor = vec3(0.2, 0.4, 0.5);
 
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);

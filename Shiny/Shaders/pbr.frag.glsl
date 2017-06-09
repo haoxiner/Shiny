@@ -102,7 +102,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float alphaG, float rough
 
 	// vec3 dominantR = GetSpecularDominantDir(N, R, NdotV, roughness);
 
-	float mipCount = 5;
+	float mipCount = 6;
 	
 	float mipLevel = LinearRoughnessToMipLevel(roughness , mipCount);
 	vec3 preLD = textureLod(specularEnvmap , dominantR , mipLevel).rgb;
@@ -176,15 +176,14 @@ void main()
 
 	float roughness = texture(roughnessMap, uv).r;
 	float alphaG = roughness * roughness;
-	float metallic = texture(metallicMap, uv).r;
-	metallic = 1.0;
+	float metallic = texture(metallicMap, uv).r * material0.y;
+	vec3 baseColor = texture(baseColorMap, uv).rgb;
+
 	// metallic = material0.y;
 	// roughness = 1.0 - material0.x;
 	// alphaG = roughness * roughness;
-	
+	// baseColor = vec3(1.0, 0.0, 0.0);
 
-	vec3 baseColor = texture(baseColorMap, uv).rgb;
-	// baseColor = vec3(1.0);
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 

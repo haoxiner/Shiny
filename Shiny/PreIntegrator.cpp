@@ -89,7 +89,7 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
     }
     computeShaderProgram.Shutdown();
 
-    const int outputMaxMipLevel = 5;
+    const int outputMaxMipLevel = 6;
     int specularOutputWidth = 512;
     for (int level = 0; level <= outputMaxMipLevel; level++) {
         int local_size_x = std::min(specularOutputWidth, 32);
@@ -116,7 +116,7 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
             glDeleteTextures(1, &outputTextureID);
         }
         computeSpecular.Shutdown();
-        std::cerr << specularOutputWidth << std::endl;
+        std::cerr << level << ": " << specularOutputWidth << std::endl;
         specularOutputWidth /= 2;
     }
     glDeleteBuffers(1, &argsBufferID);

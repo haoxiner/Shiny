@@ -78,7 +78,7 @@ void TestPreIntegrator()
     
     Shiny::PreIntegrator preIntegrator;
     //preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
-    preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/pisa/src", "pisa", "../../Resources/Environment/pisa", "pisa");
+    preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
 }
 int main()
 {

@@ -57,5 +57,7 @@ private:
     float testFloat_ = 0.0f;
     float testMetallic_ = 0.0f;
     float testDominant_ = 0.0f;
+
+    Material* bronzeMetal_;
 };
 }

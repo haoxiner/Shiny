@@ -157,12 +157,23 @@ const Shiny::Json::JsonValue& Shiny::Json::JsonObject::GetValue(const std::strin
 Shiny::Json::Parser::Parser(JsonObject* jsonObject, const char* json, const size_t length)
     : json_(json), length_(length), jsonObject_(jsonObject)
 {
+    Parse();
+}
+
+Shiny::Json::Parser::Parser(JsonObject* jsonObject, const std::string& json)
+    : json_(json.c_str()), length_(json.length()), jsonObject_(jsonObject)
+{
+    Parse();
+}
+
+void Shiny::Json::Parser::Parse()
+{
     ch_ = json_[0];
     SkipSpacesAndComments();
     if (ch_ != '{') {
         SubmitError();
     } else {
-        ParseObject(jsonObject);
+        ParseObject(jsonObject_);
     }
 }
 

@@ -25,6 +25,9 @@
     <Filter Include="OfflineTools">
       <UniqueIdentifier>{0c7f61cb-0fec-4828-9baa-1100414baa77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderEngine">
+      <UniqueIdentifier>{3d53f1a4-9bfb-46e7-985f-544fe97ff608}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MathUtil.h">
@@ -108,6 +111,9 @@
     <ClInclude Include="Json.h">
       <Filter>Util</Filter>
     </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -172,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="Json.cpp">
       <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -176,7 +176,7 @@ void main()
 
 	float roughness = texture(roughnessMap, uv).r;
 	float alphaG = roughness * roughness;
-	float metallic = texture(metallicMap, uv).r * material0.y;
+	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
 	// metallic = material0.y;

@@ -2,6 +2,7 @@
 #include "ResourceManager.h"
 #include "FreeImage.h"
 #include "TinyObjLoader.h"
+
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -82,53 +83,13 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         FreeImage_Unload(dib);
         glBindTextureUnit(1, dfgTexture_);
     }
-    {
-        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/Material/bronze_copper/basecolor.exr");
-        //FreeImage_AdjustGamma(dib, 2.2);
-        auto w = FreeImage_GetWidth(dib);
-        auto h = FreeImage_GetHeight(dib);
-        auto bpp = FreeImage_GetBPP(dib);
-        std::cerr << w << "," << h <<  ", bpp: " << bpp << std::endl;
-        auto bits = FreeImage_GetBits(dib);
-        glCreateTextures(GL_TEXTURE_2D, 1, &baseColorMapID_);
-        glTextureStorage2D(baseColorMapID_, 1, GL_RGB16F, w, h);
-        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, bits);
-        FreeImage_Unload(dib);
-        glBindTextureUnit(3, baseColorMapID_);
-    }
-    {
-        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/Material/bronze_copper/roughness.exr");
-        auto w = FreeImage_GetWidth(dib);
-        auto h = FreeImage_GetHeight(dib);
-        auto bpp = FreeImage_GetBPP(dib);
-        std::cerr << w << "," << h << ", bpp: " << bpp << std::endl;
-        auto bits = FreeImage_GetBits(dib);
-        glCreateTextures(GL_TEXTURE_2D, 1, &roughnessMapID_);
-        glTextureStorage2D(roughnessMapID_, 1, GL_R16F, w, h);
-        glTextureSubImage2D(roughnessMapID_, 0, 0, 0, w, h, GL_RED, GL_FLOAT, bits);
-        FreeImage_Unload(dib);
-        glBindTextureUnit(4, roughnessMapID_);
-    }
-    {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/carmetal/metallic.png");
-        auto w = FreeImage_GetWidth(dib);
-        auto h = FreeImage_GetHeight(dib);
-        auto bpp = FreeImage_GetBPP(dib);
-        std::cerr << w << "," << h << ", bpp: " << bpp << std::endl;
-        auto bits = FreeImage_GetBits(dib);
-        glCreateTextures(GL_TEXTURE_2D, 1, &metallicMapID_);
-        glTextureStorage2D(metallicMapID_, 1, GL_R8, w, h);
-        glTextureSubImage2D(metallicMapID_, 0, 0, 0, w, h, GL_RED, GL_UNSIGNED_BYTE, bits);
-        FreeImage_Unload(dib);
-        glBindTextureUnit(5, metallicMapID_);
-    }
+    bronzeMetal_ = new Material("bronze_copper");
+    bronzeMetal_->Bind();
     //cubemap
-    {
-        specularCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_specular");
-        specularCubemap_->BindTextureUint(2);
-        diffuseCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_diffuse");
-        diffuseCubemap_->BindTextureUint(0);
-    }
+    specularCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_specular");
+    specularCubemap_->BindTextureUint(2);
+    diffuseCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_diffuse");
+    diffuseCubemap_->BindTextureUint(0);
     return true;
 }
 
@@ -179,4 +140,5 @@ void Shiny::Game::Shutdown()
     glDeleteBuffers(constantBufferList_.size(), constantBufferList_.data());
     delete specularCubemap_;
     delete diffuseCubemap_;
+    delete bronzeMetal_;
 }

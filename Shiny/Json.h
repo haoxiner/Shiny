@@ -59,9 +59,11 @@ class Parser
 {
 public:
     Parser(JsonObject* jsonObject, const char* json, const size_t length);
+    Parser(JsonObject* jsonObject, const std::string& json);
     bool HasError();
     std::string GetErrorMessage() const;
 private:
+    void Parse();
     void SubmitError();
     bool Forward();
     void Forward(size_t count);

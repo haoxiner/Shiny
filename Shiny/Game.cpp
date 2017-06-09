@@ -83,7 +83,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         glBindTextureUnit(1, dfgTexture_);
     }
     {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Texture/octostone/albedo.png");
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/metalweapon/basecolor.png");
         //FreeImage_AdjustGamma(dib, 2.2);
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
@@ -92,25 +92,25 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         auto bits = FreeImage_GetBits(dib);
         glCreateTextures(GL_TEXTURE_2D, 1, &baseColorMapID_);
         glTextureStorage2D(baseColorMapID_, 1, GL_RGB8, w, h);
-        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, bits);
+        glTextureSubImage2D(baseColorMapID_, 0, 0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, bits);
         FreeImage_Unload(dib);
         glBindTextureUnit(3, baseColorMapID_);
     }
     {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Texture/octostone/roughness.png");
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/metalweapon/roughness.png");
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
         auto bpp = FreeImage_GetBPP(dib);
         std::cerr << w << "," << h << ", bpp: " << bpp << std::endl;
         auto bits = FreeImage_GetBits(dib);
-        glCreateTextures(GL_TEXTURE_2D, 1, &smoothnessMapID_);
-        glTextureStorage2D(smoothnessMapID_, 1, GL_R8, w, h);
-        glTextureSubImage2D(smoothnessMapID_, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, bits);
+        glCreateTextures(GL_TEXTURE_2D, 1, &roughnessMapID_);
+        glTextureStorage2D(roughnessMapID_, 1, GL_R8, w, h);
+        glTextureSubImage2D(roughnessMapID_, 0, 0, 0, w, h, GL_RED, GL_UNSIGNED_BYTE, bits);
         FreeImage_Unload(dib);
-        glBindTextureUnit(4, smoothnessMapID_);
+        glBindTextureUnit(4, roughnessMapID_);
     }
     {
-        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Texture/greasy_metal/metallic.png");
+        auto dib = FreeImage_Load(FIF_PNG, "../../Resources/Material/metalweapon/metallic.png");
         auto w = FreeImage_GetWidth(dib);
         auto h = FreeImage_GetHeight(dib);
         auto bpp = FreeImage_GetBPP(dib);
@@ -118,15 +118,15 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
         auto bits = FreeImage_GetBits(dib);
         glCreateTextures(GL_TEXTURE_2D, 1, &metallicMapID_);
         glTextureStorage2D(metallicMapID_, 1, GL_R8, w, h);
-        glTextureSubImage2D(metallicMapID_, 0, 0, 0, w, h, GL_BGR, GL_UNSIGNED_BYTE, bits);
+        glTextureSubImage2D(metallicMapID_, 0, 0, 0, w, h, GL_RED, GL_UNSIGNED_BYTE, bits);
         FreeImage_Unload(dib);
         glBindTextureUnit(5, metallicMapID_);
     }
     //cubemap
     {
-        specularCubemap_ = new Cubemap("../../Resources/Environment/doge2_specular", "doge2_specular");
+        specularCubemap_ = new Cubemap("../../Resources/Environment/pisa", "pisa_specular");
         specularCubemap_->BindTextureUint(2);
-        diffuseCubemap_ = new Cubemap("../../Resources/Environment/doge2_diffuse", "doge2_diffuse");
+        diffuseCubemap_ = new Cubemap("../../Resources/Environment/pisa", "pisa_diffuse");
         diffuseCubemap_->BindTextureUint(0);
     }
     return true;
@@ -162,10 +162,11 @@ void Shiny::Game::Render()
     shaderProgram_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     for (auto&& mesh : meshes_) {
-        for (int i = 0; i <= 0; i++) {
-            auto smoothness = 1.0f - i / 10.0f;
+        const int meshCount = 0;
+        for (int i = 0; i <= meshCount; i++) {
+            auto smoothness = 1.0f - i / (float)meshCount;
             //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0,-0, -4)) * MakeScaleMatrix(2.0, 2.0, 2.0) * QuaternionToMatrix(Normalize(quat));// ;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0,-0, -5)) * MakeScaleMatrix(2.0, 2.0, 2.0) * QuaternionToMatrix(Normalize(quat));// ;
             perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             mesh.Render();

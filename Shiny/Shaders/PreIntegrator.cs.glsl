@@ -2,7 +2,7 @@
 // layout(local_size_x = 8, local_size_y = 8) in;
 #define M_PI 3.14159265358979323846
 #define M_INV_PI (1.0/M_PI)
-#define FLOAT_EPSILON 0.0
+#define FLOAT_EPSILON 1e-7
 
 // arguments for prefilter
 layout (binding = 0, std140) uniform InputBuffer
@@ -315,7 +315,7 @@ vec3 IntegrateCubeLDOnly(
 			float NdotH = Saturate(dot(N, H));
 			float LdotH = Saturate(dot(L, H));
 			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
-			if (pdf > FLOAT_EPSILON) {
+			if (pdf > 0.0) {
 				float omegaS = 1.0 / (float(NUM_OF_SAMPLES) * pdf);
 				float omegaP = 4.0 * M_PI / (6.0 * float(gl_NumWorkGroups.x * gl_WorkGroupSize.x * gl_NumWorkGroups.y * gl_WorkGroupSize.y));
 				float maxMipLevel = float(INPUT_ENVMAP_MAX_MIPLEVEL);
@@ -327,7 +327,7 @@ vec3 IntegrateCubeLDOnly(
 			accBrdfWeight += NdotL;
 		}
 	}
-	if (FloatEqual(accBrdfWeight, 0.0)) {
+	if (accBrdfWeight <= 0.0) {
 		return vec3(0.0);
 	}
 	return accBrdf * (1.0f / accBrdfWeight);
@@ -390,11 +390,14 @@ void main()
 	outputColor = IntegrateDFGOnly(vec3(0.0, 0.0, 1.0), V, roughness);
 	#elif defined (INTEGRATE_SPECULAR)
 	vec3 direction = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
-	// level/maxLevel = linearRoughness
+	// level/maxLevel = sqrt(linearRoughness)
 	// roughness = linearRoughness * linearRoughness
-	// GGX alpha = roughness
-	float roughness = pow(inputArg1.y / inputArg1.z, 4.0);
-	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, roughness);
+	// GGX alpha = roughness = pow(level/maxlevel, 4.0)
+	// float roughness = pow(inputArg1.y / inputArg1.z, 4.0);
+	// Above is Frostbite version. we map level/maxLevel = linearRoughness
+	float linearRoughness = pow(inputArg1.y / inputArg1.z, 4.0);
+	// float roughness = linearRoughness * linearRoughness;
+	outputColor.xyz = IntegrateCubeLDOnly(direction, direction, linearRoughness);
 	#elif defined (INTEGRATE_DIFFUSE)
 	vec3 n = CubeFaceTexCoordToDirection(outputTexCoord, uint(inputArg1.w));
 	outputColor = IntegrateDiffuseCube(n);

@@ -50,7 +50,7 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
                                                           const std::string& outputID)
 {
     const int diffuseOutputWidth = 64;
-    const int samplesPerPixel = 1024 * 4;
+    const int samplesPerPixel = 1024;
 
     const std::string FACE_NAME[] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
     // arguments buffer
@@ -85,6 +85,7 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
         glDispatchCompute(diffuseOutputWidth / local_size_x, diffuseOutputWidth / local_size_y, local_size_z);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         Save(outputTextureID, outputDirectory + "/" + outputID + "_diffuse_" + FACE_NAME[face] + ".exr", diffuseOutputWidth, diffuseOutputWidth, true, true);
+        glDeleteTextures(1, &outputTextureID);
     }
     computeShaderProgram.Shutdown();
 
@@ -96,7 +97,6 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
         int local_size_z = 1;
         ShaderProgram computeSpecular;
         computeSpecular.Startup(shaderSource_, local_size_x, local_size_y, local_size_z, { "INTEGRATE_SPECULAR" });
-        computeSpecular.Use();
         for (int face = 0; face < 6; face++) {
             auto inputBuffer = reinterpret_cast<ArgumentsBlock*>(glMapNamedBuffer(argsBufferID, GL_WRITE_ONLY));
             inputBuffer->inputArg0 = { cubemap.GetWidth(), specularOutputWidth, samplesPerPixel, 0 };
@@ -109,13 +109,15 @@ void Shiny::PreIntegrator::IntegrateIBLDiffuseAndSpecular(const std::string& inp
             glCreateTextures(GL_TEXTURE_2D, 1, &outputTextureID);
             glBindImageTexture(0, outputTextureID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
             glTextureStorage2D(outputTextureID, 1, GL_RGBA32F, specularOutputWidth, specularOutputWidth);
+            computeSpecular.Use();
             glDispatchCompute(specularOutputWidth / local_size_x, specularOutputWidth / local_size_y, local_size_z);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-            Save(outputTextureID, outputDirectory + "/" + outputID + "_" + FACE_NAME[face] + (level > 0 ? ("_" + std::to_string(level)) : "") + ".exr", specularOutputWidth, specularOutputWidth, true, true);
+            Save(outputTextureID, outputDirectory + "/" + outputID + "_specular_" + FACE_NAME[face] + (level > 0 ? ("_" + std::to_string(level)) : "") + ".exr", specularOutputWidth, specularOutputWidth, true, true);
+            glDeleteTextures(1, &outputTextureID);
         }
         computeSpecular.Shutdown();
         std::cerr << specularOutputWidth << std::endl;
-        specularOutputWidth = specularOutputWidth / 2;
+        specularOutputWidth /= 2;
     }
     glDeleteBuffers(1, &argsBufferID);
 }

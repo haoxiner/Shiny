@@ -21,7 +21,7 @@ layout(binding = 0) uniform samplerCube diffuseEnvmap;
 layout(binding = 1) uniform sampler2D dfgMap;
 layout(binding = 2) uniform samplerCube specularEnvmap;
 layout(binding = 3) uniform sampler2D baseColorMap;
-layout(binding = 4) uniform sampler2D smoothnessMap;
+layout(binding = 4) uniform sampler2D roughnessMap;
 layout(binding = 5) uniform sampler2D metallicMap;
 // layout(binding = 3) uniform samplerCube cubemap;
 
@@ -83,8 +83,8 @@ vec3 GetSpecularDominantDir(vec3 N, vec3 R, float NdotV , float roughness)
 }
 float LinearRoughnessToMipLevel(float linearRoughness, float maxMipLevel)
 {
-	return sqrt(linearRoughness) * maxMipLevel;
-	// return linearRoughness * maxMipLevel;
+	// return sqrt(linearRoughness) * maxMipLevel;
+	return linearRoughness * maxMipLevel;
 }
 vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0, vec3 f90)
 {
@@ -92,7 +92,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float roughness, vec3 f0,
 
 	// vec3 R = 2 * dot( V, N ) * N - V;
 	vec3 R = reflect(-V, N);
-	vec3 dominantR = GetSpecularDominantDir(N, R, roughness);
+	vec3 dominantR = GetSpecularDominantDir(N, R, linearRoughness);
 	// vec3 dominantR = GetSpecularDominantDir(N, R, linearRoughness);
 
 	// Rebuild the function
@@ -171,20 +171,19 @@ void main()
 	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
 	
-	vec2 uv = texCoord * 2.0;
+	vec2 uv = texCoord * 1.0;
 
-	// float smoothness = pow(texture(smoothnessMap, uv).r, 2.2);
-	// float linearRoughness = 1.0 - smoothness;
-	// float roughness = linearRoughness * linearRoughness;
-
-	float linearRoughness = pow(texture(smoothnessMap, uv).r, 2.2);
+	float linearRoughness = pow(texture(roughnessMap, uv).r, 2.2);
 	float roughness = linearRoughness * linearRoughness;
 	// roughness = 0.2;
 	float metallic = pow(texture(metallicMap, uv).r, 2.2);
-	metallic = 0;
+	// float metallic = 0;
+	// metallic = material0.y;
+	// roughness = pow(1.0 - material0.x, 2.0);
 	
 
 	vec3 baseColor = ApproximationSRgbToLinear(texture(baseColorMap, uv).rgb);
+	// baseColor = vec3(1.0);
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 
@@ -196,9 +195,11 @@ void main()
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, roughness);
 	fragColor.xyz = diffuse + specular;
-	float exposure = 3.5;
+	float exposure = 1.0;
 	fragColor *= exposure;
-	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
+	// fragColor.xyz = TonemapUncharted2(fragColor.xyz);
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
+
+	fragColor.xyz = ApproximationLinearToSRGB(vec3(linearRoughness));
 }

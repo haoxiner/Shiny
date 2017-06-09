@@ -90,6 +90,7 @@ Shiny::Cubemap::Cubemap(const std::string& directory, const std::string& fileID)
     int configMaxMipLevel = 0;
     bool loadMipmapFromFile = false;
     if (!parser.HasError()) {
+        std::cerr << "Load Config" << std::endl;
         configMaxMipLevel = config.GetValue("max_mip_level").AsInt();
         loadMipmapFromFile = config.GetValue("load_mipmap_from_file").AsBool();
     }

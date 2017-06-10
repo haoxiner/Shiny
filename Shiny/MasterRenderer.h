@@ -13,9 +13,10 @@ class MasterRenderer
 public:
     bool Startup(int xResolution, int yResolution);
     void Shutdown();
-    void SetEnvironment(const std::string& name);
-    void IntegrateCubemap();
+    void SetupEnvironment(const std::string& name);
+    void Render(float deltaTime);
 private:
+    ShaderProgram stationaryEntityShader_;
     GLuint dfgTextureID_;
     GLuint defaultSamplerID_;
     GLuint repeatSamplerID_;

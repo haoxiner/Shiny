@@ -1,6 +1,7 @@
 #version 450 core
-layout(location = 0) in vec4 vertexAttribute0;
-layout(location = 1) in vec4 vertexAttribute1;
+layout(location = 0) in vec3 vertexPosition;
+layout(location = 1) in vec4 vertexNormal;
+layout(location = 2) in vec2 vertexTexCoord;
 out vec3 position;
 out vec3 normal;
 out vec2 texCoord;
@@ -20,9 +21,9 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 };
 void main()
 {
-	position = (modelToWorld * vec4(vertexAttribute0.xyz, 1.0)).xyz;
-	normal = normalize(modelToWorld * vec4(vertexAttribute1.xyz, 0.0)).xyz;
-	texCoord = vec2(vertexAttribute0.w, vertexAttribute1.w);
+	position = (modelToWorld * vec4(vertexPosition.xyz, 1.0)).xyz;
+	normal = normalize(modelToWorld * vec4(vertexNormal.xyz, 0.0)).xyz;
+	texCoord = vertexTexCoord;
 
 	gl_Position = viewToProjection * worldToView * vec4(position, 1.0);
 }

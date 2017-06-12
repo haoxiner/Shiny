@@ -106,6 +106,7 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
         glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
         for (auto&& pair : entity.models_) {
             auto material = pair.first;
+            
             material->Use();
             for (auto&& mesh : pair.second) {
                 mesh->Render();

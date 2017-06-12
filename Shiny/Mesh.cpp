@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include "Json.h"
+#include "ResourceManager.h"
 #include <iostream>
 
 Shiny::Mesh::Mesh(int numOfAttibutePerVertex)
@@ -14,7 +15,7 @@ Shiny::Mesh::Mesh(int numOfAttibutePerVertex)
 
 Shiny::Mesh::~Mesh()
 {
-    std::cerr << "Mesh Des" << std::endl;
+    std::cerr << "Mesh Destroy" << std::endl;
     glDeleteVertexArrays(1, &vao_);
     glDeleteBuffers(vboList_.size(), vboList_.data());
 }
@@ -84,9 +85,68 @@ void Shiny::Mesh::LoadIndices(const std::vector<unsigned int>& indices)
     LoadIndices(indices.data(), indices.size() * sizeof(indices[0]));
 }
 
+
+struct VertexDescription
+{
+    int numOfChannel;
+    GLenum type;
+    bool normalized;
+    int size;
+};
 void Shiny::Mesh::LoadStandardPackage(const std::string& name)
 {
+    
+    const std::string directory = "../../Resources/Model/";
+    const std::string prefix = directory + name;
+    Json::JsonObject json;
+    Json::Parser parser(&json, ResourceManager::ReadFileToString(prefix + ".json"));
+    std::cerr << parser.GetErrorMessage() << std::endl;
+    bool hasSkeleton = json.GetValue("has_skeleton").AsBool();
+    
+    auto vertexInfo = json.GetValue("vertex").AsJsonObject();
+    int vertexDataOffset = vertexInfo->GetValue("offset").AsInt();
+    int vertexDataLength = vertexInfo->GetValue("length").AsInt();
 
+    auto indexInfo = json.GetValue("index").AsJsonObject();
+    int indexDataOffset = indexInfo->GetValue("offset").AsInt();
+    int indexDataLength = indexInfo->GetValue("length").AsInt();
+    numOfIndex_ = indexInfo->GetValue("count").AsInt();
+
+    std::cerr << vertexDataOffset << "," << vertexDataLength << "," << indexDataOffset << "," << indexDataLength << "," << numOfIndex_ << std::endl;
+
+    std::vector<char> vertexData(vertexDataLength);
+    std::vector<char> indexData(indexDataLength);
+
+    std::ifstream inputFileStream(prefix + ".bin", std::ios::binary);
+    inputFileStream.read(vertexData.data(), vertexDataLength);
+    inputFileStream.read(indexData.data(), indexDataLength);
+    inputFileStream.close();
+
+    const std::vector<VertexDescription> vertexDescList = {
+        { 3, GL_FLOAT, false, 3 * sizeof(float) }, // position: float3
+        { 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // normal: int 2_10_10_10
+        //{ 3, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // binormal: int 2_10_10_10
+        { 2, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) } // texcoord: unsigned short2
+    };
+    int stride = 0;// 40;
+    for (const auto& desc : vertexDescList) {
+        stride += desc.size;
+    }
+    std::cerr << "stride" << stride << std::endl;
+    glNamedBufferStorage(vboList_[0], vertexData.size(), vertexData.data(), 0);
+    glVertexArrayVertexBuffer(vao_, 0, vboList_[0], 0, stride);
+    for (int index = 0, relativeOffset = 0; index < vertexDescList.size(); index++) {
+        const auto& desc = vertexDescList[index];
+        glEnableVertexArrayAttrib(vao_, index);
+        glVertexArrayAttribFormat(vao_, index, desc.numOfChannel, desc.type, desc.normalized, relativeOffset);
+        relativeOffset += desc.size;
+        glVertexArrayAttribBinding(vao_, index, 0);
+        std::cerr << "relative: " << relativeOffset << std::endl;
+    }
+    int* d = (int*)indexData.data();
+    std::cerr << vboList_ .size() << std::endl;
+    glNamedBufferStorage(vboList_[1], indexData.size(), indexData.data(), 0);
+    glVertexArrayElementBuffer(vao_, vboList_[1]);
 }
 
 void Shiny::Mesh::Render()

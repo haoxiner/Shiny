@@ -39,15 +39,6 @@ inline float DegreesToRadians(float degrees)
     return glm::radians(degrees);
 }
 
-/*
-    map float of [-1.0, 1.0] to short
-*/
-inline short MapToShort(float value)
-{
-    constexpr float mapToPositive = 32767.0f;
-    constexpr float mapToNegative = -32768.0f;
-    return static_cast<short>((value >= 0 ? mapToPositive * value + 0.5f : -(mapToNegative * value + 0.5f)));
-}
 
 using Float2 = glm::vec2;
 using Float3 = glm::vec3;
@@ -124,5 +115,71 @@ Scale By Vector3f
 inline Matrix4x4 MakeScaleMatrix(const Float3& vector3f)
 {
     return MakeScaleMatrix(vector3f.x, vector3f.y, vector3f.z);
+}
+
+
+/*
+map float of [-1.0, 1.0] to short
+*/
+inline short MapToShort(float value)
+{
+    constexpr float mapToPositive = 32767.0f;
+    constexpr float mapToNegative = -32768.0f;
+    return static_cast<short>((value >= 0 ? mapToPositive * value + 0.5f : -(mapToNegative * value + 0.5f)));
+}
+
+/*
+map float of [0.0, 1.0] to unsigned short
+*/
+inline unsigned short MapToUnsignedShort(float value)
+{
+    constexpr float mapToPositive = 65535.0f;
+    return static_cast<short>(mapToPositive * value + 0.5f);
+}
+
+/*
+map float of [-1.0, 1.0] to 10 bit int
+*/
+inline int MapTo10BitInt(float value)
+{
+    constexpr float mapToPositive = 1023.0f;
+    return static_cast<int>(mapToPositive * value + 0.5f);
+}
+
+/*
+map float of [0.0, 1.0] to 10 bit unsigned int
+*/
+inline unsigned int MapTo10BitUInt(float value)
+{
+    constexpr float mapToPositive = 511.0f;
+    constexpr float mapToNegative = -512.0f;
+    return static_cast<short>((value >= 0 ? mapToPositive * value + 0.5f : -(mapToNegative * value + 0.5f)));
+}
+struct Int_2_10_10_10
+{
+    int x : 10;
+    int y : 10;
+    int z : 10;
+    int a : 2;
+};
+struct UInt_2_10_10_10
+{
+    unsigned int x : 10;
+    unsigned int y : 10;
+    unsigned int z : 10;
+    unsigned int a : 2;
+};
+//Pack float3 to 32 bit unsigned integer
+inline UInt_2_10_10_10 PackFloat3ToUInt2_10_10_10(const Float3& float3)
+{
+    constexpr float mapToPositive = 1023;
+    return UInt_2_10_10_10{ MapTo10BitUInt(float3.x), MapTo10BitUInt(float3.y), MapTo10BitUInt(float3.z), 0 };
+}
+//Pack float3 to 32 bit integer
+inline Int_2_10_10_10 PackFloat3ToInt2_10_10_10(const Float3& float3)
+{
+    constexpr float mapToPositive = 511;
+    constexpr float mapToNegative = -512;
+    return Int_2_10_10_10{ MapTo10BitInt(float3.x), MapTo10BitInt(float3.y), MapTo10BitInt(float3.z), 0 };
 }
 }

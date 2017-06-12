@@ -19,6 +19,6 @@ private:
     GLuint vao_;
     std::vector<GLuint> vboList_;
     int numOfIndex_;
-    bool indexIsUnsignedShort;
+    bool indexIsUnsignedShort = false;
 };
 }

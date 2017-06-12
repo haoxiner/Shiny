@@ -24,7 +24,9 @@ int TestDisplay()
     auto input = display.GetInput();
     // Game
     Shiny::Game game;
-    game.Startup(xResolution, yResolution, input);
+    if (!game.Startup(xResolution, yResolution, input)) {
+        return 1;
+    }
     // tick
     float deltaTime = 0.0f;
     Shiny::PerformanceTimer performanceTimer;
@@ -69,5 +71,6 @@ int main()
     //TestPreIntegrator();
     using namespace Shiny;
     TestDisplay();
+    //ResourceManager::WriteObjToSPK("../../Resources/Model/Cube.obj", "../../Resources/Model/cube.bin");
     return 0;
 }

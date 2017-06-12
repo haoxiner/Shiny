@@ -10,12 +10,12 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 {
     masterRenderer_.Startup(xResolution, yResolution);
 
-    meshes_.emplace_back(std::make_shared<Mesh>(2));
-    ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", *meshes_[0]);
-    
-    meshes_.emplace_back(std::make_shared<Mesh>(2));
-    std::weak_ptr<Mesh> sphere = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/Model/sphere.obj", *meshes_[1]);
+    meshes_.emplace_back(std::make_shared<Mesh>(1));
+    //ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", *meshes_[0]);
+    meshes_[0]->LoadStandardPackage("cube");
+
+    //meshes_.emplace_back(std::make_shared<Mesh>(2));
+    //ResourceManager::LoadObjToMesh("../../Resources/Model/sphere.obj", *meshes_[1]);
 
     bronzeMetal_.reset(new Material("bronze_copper"));
     
@@ -25,11 +25,11 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     e0.scale_ = Float3(2.0);
     e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
 
-    batchOfStationaryEntity_.entityList_.emplace_back();
-    auto& e1 = batchOfStationaryEntity_.entityList_.back();
-    e1.position_ = Float3(4, -2, -10);
-    e1.scale_ = Float3(1.5);
-    e1.models_[bronzeMetal_].emplace_back(meshes_[1]);
+    //batchOfStationaryEntity_.entityList_.emplace_back();
+    //auto& e1 = batchOfStationaryEntity_.entityList_.back();
+    //e1.position_ = Float3(4, -2, -10);
+    //e1.scale_ = Float3(1.5);
+    //e1.models_[bronzeMetal_].emplace_back(meshes_[1]);
     
     skyBox_.reset(new SkyBox("uffizi"));
    

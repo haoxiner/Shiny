@@ -18,7 +18,7 @@ bool Shiny::Display::Startup(int xResolution, int yResolution, bool showWindow) 
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
-    window_ = SDL_CreateWindow("Project Dragon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xResolution, yResolution, SDL_WINDOW_OPENGL | (showWindow ? SDL_WINDOW_SHOWN : SDL_WINDOW_HIDDEN));
+    window_ = SDL_CreateWindow("Shiny", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, xResolution, yResolution, SDL_WINDOW_OPENGL | (showWindow ? SDL_WINDOW_SHOWN : SDL_WINDOW_HIDDEN));
     if (window_ == nullptr) {
         return false;
     }
@@ -30,7 +30,7 @@ bool Shiny::Display::Startup(int xResolution, int yResolution, bool showWindow) 
         return false;
     }
     
-    SDL_GL_SetSwapInterval(0);
+    SDL_GL_SetSwapInterval(1);
     //    SDL_SetRelativeMouseMode(SDL_TRUE);
     glewExperimental = true;
     glewInit();

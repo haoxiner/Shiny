@@ -142,8 +142,9 @@ map float of [-1.0, 1.0] to 10 bit int
 */
 inline int MapTo10BitInt(float value)
 {
-    constexpr float mapToPositive = 1023.0f;
-    return static_cast<int>(mapToPositive * value + 0.5f);
+    constexpr float mapToPositive = 511.0f;
+    constexpr float mapToNegative = -512.0f;
+    return static_cast<int>((value >= 0 ? mapToPositive * value + 0.5f : -(mapToNegative * value + 0.5f)));
 }
 
 /*
@@ -151,9 +152,8 @@ map float of [0.0, 1.0] to 10 bit unsigned int
 */
 inline unsigned int MapTo10BitUInt(float value)
 {
-    constexpr float mapToPositive = 511.0f;
-    constexpr float mapToNegative = -512.0f;
-    return static_cast<short>((value >= 0 ? mapToPositive * value + 0.5f : -(mapToNegative * value + 0.5f)));
+    constexpr float mapToPositive = 1023.0f;
+    return static_cast<unsigned int>(mapToPositive * value + 0.5f);
 }
 struct Int_2_10_10_10
 {
@@ -172,14 +172,11 @@ struct UInt_2_10_10_10
 //Pack float3 to 32 bit unsigned integer
 inline UInt_2_10_10_10 PackFloat3ToUInt2_10_10_10(const Float3& float3)
 {
-    constexpr float mapToPositive = 1023;
     return UInt_2_10_10_10{ MapTo10BitUInt(float3.x), MapTo10BitUInt(float3.y), MapTo10BitUInt(float3.z), 0 };
 }
 //Pack float3 to 32 bit integer
 inline Int_2_10_10_10 PackFloat3ToInt2_10_10_10(const Float3& float3)
 {
-    constexpr float mapToPositive = 511;
-    constexpr float mapToNegative = -512;
     return Int_2_10_10_10{ MapTo10BitInt(float3.x), MapTo10BitInt(float3.y), MapTo10BitInt(float3.z), 0 };
 }
 }

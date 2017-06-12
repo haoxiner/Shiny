@@ -90,11 +90,22 @@ void MasterRenderer::Update(float deltaTime)
     Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = Matrix4x4(1.0f)*QuaternionToMatrix(Normalize(quat));
+    perFrameBuffer->worldToView = Matrix4x4(1.0f);
     glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
 }
 void MasterRenderer::Render(BatchOfStationaryEntity& batch)
 {   
+    static auto testFloat = 0.0f;
+    testFloat += deltaTime_;
+    //testFloat_ = 0;
+    auto sinTheta = std::sinf(DegreesToRadians(testFloat * 6.0f));
+    auto cosTheta = std::cosf(DegreesToRadians(testFloat * 6.0f));
+    Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
+    auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
+    perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
+    perFrameBuffer->worldToView = Matrix4x4(1.0f);
+    glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
+
     stationaryEntityShader_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     glBindTextureUnit(0, dfgTextureID_);
@@ -102,7 +113,7 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
     diffuseCubemap_->BindTextureUint(1);
     specularCubemap_->BindTextureUint(2);
     for (auto&& entity : batch.entityList_) {
-        perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_);// *QuaternionToMatrix(Normalize(quat));// ;
+        perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) *QuaternionToMatrix(Normalize(quat));// ;
         glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
         for (auto&& pair : entity.models_) {
             auto material = pair.first;

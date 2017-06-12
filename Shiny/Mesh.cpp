@@ -126,7 +126,7 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
         { 3, GL_FLOAT, false, 3 * sizeof(float) }, // position: float3
         { 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // normal: int 2_10_10_10
         //{ 3, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // binormal: int 2_10_10_10
-        { 2, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) } // texcoord: unsigned short2
+        { 2, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 2 } // texcoord: unsigned short2
     };
     int stride = 0;// 40;
     for (const auto& desc : vertexDescList) {

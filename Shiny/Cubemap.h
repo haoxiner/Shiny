@@ -6,7 +6,7 @@ namespace Shiny
 class Cubemap
 {
 public:
-    Cubemap(const std::string& directory, const std::string& fileID);
+    Cubemap(const std::string& directory, const std::string& fileID, bool enableHDR = true);
     ~Cubemap();
     void BindTextureUint(int unit) const;
     int GetMaxMipLevel() const { return maxMipLevel_; }

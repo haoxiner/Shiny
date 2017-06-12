@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "Json.h"
 #include <iostream>
 
 Shiny::Mesh::Mesh(int numOfAttibutePerVertex)
@@ -8,10 +9,12 @@ Shiny::Mesh::Mesh(int numOfAttibutePerVertex)
     glCreateBuffers(vboList_.size(), vboList_.data());
     //glGenVertexArrays(1, &vao_);
     //glGenBuffers(vboList_.size(), vboList_.data());
+    std::cerr << "Mesh Cons" << std::endl;
 }
 
 Shiny::Mesh::~Mesh()
 {
+    std::cerr << "Mesh Des" << std::endl;
     glDeleteVertexArrays(1, &vao_);
     glDeleteBuffers(vboList_.size(), vboList_.data());
 }
@@ -79,6 +82,11 @@ void Shiny::Mesh::LoadIndices(const std::vector<unsigned int>& indices)
     indexIsUnsignedShort = false;
     numOfIndex_ = indices.size();
     LoadIndices(indices.data(), indices.size() * sizeof(indices[0]));
+}
+
+void Shiny::Mesh::LoadStandardPackage(const std::string& name)
+{
+
 }
 
 void Shiny::Mesh::Render()

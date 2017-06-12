@@ -97,9 +97,6 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
 {   
     stationaryEntityShader_.Use();
     PerObjectConstantBuffer perObjectBuffer;
-    //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
-    //perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
-    
     glBindTextureUnit(0, dfgTextureID_);
     glBindSampler(0, defaultSamplerID_);
     diffuseCubemap_->BindTextureUint(1);

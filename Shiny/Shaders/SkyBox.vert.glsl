@@ -32,5 +32,7 @@ void main()
 	// every point of SkyBox is related to a point on Cubemap
 	cubemapDirection = vertexAttribute0.xyz;
 	// rotate and project SkyBox to camera
-	gl_Position = (viewToProjection * worldToView * vec4(vertexAttribute0.xyz, 1.0)).xyww;
+	vec4 position = worldToView * vec4(vertexAttribute0.xyz, 0.0);
+	position.w = 1.0;
+	gl_Position = (viewToProjection * position).xyww;
 }

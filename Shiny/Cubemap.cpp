@@ -7,7 +7,7 @@
 
 const std::string Shiny::Cubemap::FACE_NAME[6] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
 
-Shiny::Cubemap::Cubemap(const std::string& directory, const std::string& fileID)
+Shiny::Cubemap::Cubemap(const std::string& directory, const std::string& fileID, bool enableHDR)
 {
     //auto json = ResourceManager::ReadFileToString(directory + "/" + fileID + ".json");
     Json::JsonObject config;
@@ -33,7 +33,7 @@ Shiny::Cubemap::Cubemap(const std::string& directory, const std::string& fileID)
             height_ = height;
             std::cerr << width << "," << height << ", " << bpp << std::endl;
             std::cerr << "MAX_MIP_LEVEL: " << maxMipLevel_ << std::endl;
-            glTextureStorage2D(textureID_, maxMipLevel_ + 1, GL_RGB16F, width, height);
+            glTextureStorage2D(textureID_, maxMipLevel_ + 1, enableHDR ? GL_RGB16F : GL_RGB8, width, height);
         }
         FreeImage_FlipHorizontal(bitmap);
         FreeImage_FlipVertical(bitmap);

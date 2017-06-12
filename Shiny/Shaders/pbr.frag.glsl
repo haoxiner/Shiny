@@ -167,8 +167,56 @@ vec3 TonemapUncharted2(vec3 color) {
     return curr * whiteScale;
 }
 
+vec3 F_Schlick(in vec3 f0, in vec3 f90, in float u)
+{
+	return f0 + (f90 - f0) * pow(1.f - u, 5.f);
+}
+
+float V_SmithGGXCorrelated(float NdotL , float NdotV , float alphaG)
+{
+	// Original formulation of G_SmithGGX Correlated
+	// lambda_v = (-1 + sqrt(alphaG2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f;
+	// lambda_l = (-1 + sqrt(alphaG2 * (1 - NdotV2) / NdotV2 + 1)) * 0.5f;
+	// G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l);
+	// V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV);
+
+	// This is the optimize version
+	float alphaG2 = alphaG * alphaG;
+	// Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake.
+	float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
+	float Lambda_GGXL = NdotV * sqrt((-NdotL * alphaG2 + NdotL) * NdotL + alphaG2);
+
+	return 0.5 / (Lambda_GGXV + Lambda_GGXL);
+}
+
+float D_GGX(float NdotH , float m)
+{
+	// Divide by PI is apply later
+	float m2 = m * m;
+	float f = (NdotH * m2 - NdotH) * NdotH + 1;
+	return m2 / (f * f);
+}
+
+// diffuse brdf from disney
+float Fr_DisneyDiffuse(
+	float NdotV,
+	float NdotL,
+	float LdotH,
+	float linearRoughness)
+{
+	float energyBias = mix(0.0, 0.5, linearRoughness);
+	float energyFactor = mix(1.0, 1.0 / 1.51, linearRoughness);
+	float fd90 = energyBias + 2.0 * LdotH*LdotH * linearRoughness;
+	vec3 f0 = vec3(1.0f, 1.0f, 1.0f);
+	float lightScatter = F_Schlick(f0, vec3(fd90), NdotL).r;
+	float viewScatter = F_Schlick(f0, vec3(fd90), NdotV).r;
+	return lightScatter * viewScatter * energyFactor;
+}
+
+
 void main()
 {
+	fragColor = vec4(0.0);
 	vec3 L = normalize(-position);
 	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
@@ -180,10 +228,10 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	metallic = 1.0;//material0.y;
-	roughness = 0.02;
-	alphaG = roughness * roughness;
-	baseColor = vec3(0.2, 0.4, 0.5);
+	// roughness = material0.x;
+	// metallic = material0.y;
+	// alphaG = roughness * roughness;
+	// baseColor = vec3(1.0, 1.0, 1.0);
 
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
@@ -191,12 +239,37 @@ void main()
 	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;
 	vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
 
-
 	float NdotV = dot(N, V);
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, alphaG, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, alphaG);
-	fragColor.xyz = diffuse + specular;
-	float exposure = 1.5;
+	fragColor.xyz += (diffuse + specular);
+
+////////////////////// Test Analytic Light ///////////////////////
+	// This code is an example of call of previous functions
+	NdotV = abs(NdotV) + 1e-5; // avoid artifact
+	vec3 H = normalize(V + L);
+	float LdotH = Saturate(dot(L, H));
+	float NdotH = Saturate(dot(N, H));
+	float NdotL = Saturate(dot(N, L));
+
+	// Specular BRDF
+	vec3 F = F_Schlick(f0, f90, LdotH);
+	float Vis = V_SmithGGXCorrelated(NdotV , NdotL , alphaG);
+	float D = D_GGX(NdotH , alphaG);
+	vec3 Fr = D * F * Vis / PI;
+
+	// Diffuse BRDF
+	float Fd = Fr_DisneyDiffuse(NdotV , NdotL , LdotH , roughness).r / PI;
+	vec3 pointLight = vec3(20.0,20.0,20.0) - position;
+	// fragColor.xyz = vec3(500, 250, 100) * (Fr + diffuseColor * Fd) / dot(pointLight, pointLight);
+
+//////////////////////////////////////////////////////////////////
+
+	
+
+	
+
+	float exposure = 2.5;
 	fragColor *= exposure;
 	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);

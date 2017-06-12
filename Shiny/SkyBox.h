@@ -1,5 +1,7 @@
 #pragma once
 #include "Mesh.h"
+#include "Cubemap.h"
+#include <memory>
 namespace Shiny
 {
 class SkyBox
@@ -8,6 +10,6 @@ public:
     SkyBox();
 private:
     Mesh mesh_;
-    GLuint textureID_;
+    std::unique_ptr<Cubemap> cubemap_;
 };
 }

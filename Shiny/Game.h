@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "Entity.h"
 #include "ShaderProgram.h"
+#include "MasterRenderer.h"
 #include "Cubemap.h"
 #include "MathUtil.h"
 #include <vector>
@@ -19,41 +20,9 @@ public:
     void Shutdown();
 private:
     RenderingSystem renderingSystem_;
-    ShaderProgram shaderProgram_;
-    ShaderProgram skyBoxShaderProgram_;
-    std::vector<Mesh> meshes_;
-
-    struct PerObjectConstantBuffer
-    {
-        Matrix4x4 modelToWorld;
-        Float4 material0;
-    };
-    struct PerFrameConstantBuffer
-    {
-        Float4 data;
-        Matrix4x4 worldToView;
-    };
-    struct StaticConstantBuffer
-    {
-        Matrix4x4 viewToProjection;
-    };
-    enum ConstantBufferType
-    {
-        STATIC_CONSTANT_BUFFER = 0,
-        PER_FRAME_CONSTANT_BUFFER,
-        PER_OBJECT_CONSTANT_BUFFER,
-        NUM_OF_CONSTANT_BUFFER
-    };
-    std::vector<GLuint> constantBufferList_;
-    GLuint dfgTexture_;
-    GLuint samplerID_;
-    Cubemap* specularCubemap_;
-    Cubemap* diffuseCubemap_;
-    GLuint materialSamplerID_;
-    float testFloat_ = 0.0f;
-    float testMetallic_ = 0.0f;
-    float testDominant_ = 0.0f;
-
-    Material* bronzeMetal_;
+    std::vector<std::shared_ptr<Mesh>> meshes_;
+    std::shared_ptr<Material> bronzeMetal_;
+    MasterRenderer masterRenderer_;
+    BatchOfStationaryEntity batchOfStationaryEntity_;
 };
 }

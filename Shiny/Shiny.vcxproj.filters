@@ -90,9 +90,6 @@
     <ClInclude Include="Engine.h">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="SkyBox.h">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="TinyObjLoader.h">
       <Filter>OfflineTools</Filter>
     </ClInclude>
@@ -124,6 +121,9 @@
       <Filter>RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="BatchOfStationaryEntity.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyBox.h">
       <Filter>RenderEngine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -170,9 +170,6 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="SkyBox.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="TinyObjLoader.cpp">
       <Filter>OfflineTools</Filter>
     </ClCompile>
@@ -195,6 +192,9 @@
       <Filter>RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="MasterRenderer.cpp">
+      <Filter>RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
       <Filter>RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>

@@ -91,10 +91,15 @@ vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
 	return textureLod(panorama, uv, mipmapLevel);
 }
 // ======================== no need to support panorama ======================================== //
+vec4 SampleCubemap(samplerCube cubemap, vec3 direction, float lod)
+{
+	vec4 color = textureLod(cubemap, direction, lod);
+	return color;
+}
 
 // schlick approximation of the fresnel equation
 // f90 = 1.0 all the time in our Shiny Engine
-vec3 F_Schlick(in vec3 f0, in float f90, in float u)
+vec3 F_Schlick(in vec3 f0, in vec3 f90, in float u)
 {
 	return f0 + (f90 - f0) * pow(1.f - u, 5.f);
 }
@@ -137,9 +142,9 @@ float D_GGX(float NdotH, float m)
 }
 
 // D/PI
-float D_GGX_Divide_Pi(float NdotH, float roughness)
+float D_GGX_Divide_Pi(float NdotH, float alphaG)
 {
-    return D_GGX(NdotH, roughness) / M_PI;
+    return D_GGX(NdotH, alphaG) / M_PI;
 }
 
 // diffuse brdf from disney
@@ -153,8 +158,8 @@ float Fr_DisneyDiffuse(
 	float energyFactor = mix(1.0, 1.0 / 1.51, linearRoughness);
 	float fd90 = energyBias + 2.0 * LdotH*LdotH * linearRoughness;
 	vec3 f0 = vec3(1.0f, 1.0f, 1.0f);
-	float lightScatter = F_Schlick(f0, fd90, NdotL).r;
-	float viewScatter = F_Schlick(f0, fd90, NdotV).r;
+	float lightScatter = F_Schlick(f0, vec3(fd90), NdotL).r;
+	float viewScatter = F_Schlick(f0, vec3(fd90), NdotV).r;
 	return lightScatter * viewScatter * energyFactor;
 }
 
@@ -277,7 +282,7 @@ vec4 IntegrateDiffuseCube(in vec3 N)
 		// see reference code in appendix
 		ImportanceSampleCosDir(eta, N, L, NdotL , pdf);
 		if (NdotL >0)
-			accBrdf += textureLod(inputEnvmap, L, 0.0).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
+			accBrdf += SampleCubemap(inputEnvmap, L, 0.0).rgb;//IBLCube.Sample(incomingLightSampler , L).rgb;
 	}
 	return vec4(accBrdf * (1.0 / float(NUM_OF_SAMPLES)), 1.0);
 }
@@ -320,14 +325,14 @@ vec3 IntegrateCubeLDOnly(
 			float mipLevel = 0;
 			float NdotH = Saturate(dot(N, H));
 			float LdotH = Saturate(dot(L, H));
-			float pdf = D_GGX_Divide_Pi(NdotH , roughness) * NdotH/(4*LdotH);
+			float pdf = D_GGX_Divide_Pi(NdotH , alphaG) * NdotH/(4*LdotH);
 			if (pdf > 0.0) {
 				float omegaS = 1.0 / (float(NUM_OF_SAMPLES) * pdf);
 				float omegaP = 4.0 * M_PI / (6.0 * float(gl_NumWorkGroups.x * gl_WorkGroupSize.x * gl_NumWorkGroups.y * gl_WorkGroupSize.y));
 				float maxMipLevel = float(INPUT_ENVMAP_MAX_MIPLEVEL);
 				mipLevel = clamp(0.5 * log2(omegaS/omegaP), 0, maxMipLevel);
 			}
-			vec4 Li = textureLod(inputEnvmap, L, mipLevel);
+			vec4 Li = SampleCubemap(inputEnvmap, L, mipLevel);
 
 			accBrdf += Li.rgb * NdotL;
 			accBrdfWeight += NdotL;

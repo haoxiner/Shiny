@@ -14,109 +14,37 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     renderingSystem_.SetViewport(0, 0, xResolution, yResolution);
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
-    meshes_.emplace_back(2);
-    auto&& mesh = meshes_.back();
-    ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", mesh);
+    meshes_.emplace_back(new Mesh(2));
+    auto&& mitsuba = meshes_.back();
+    ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", *mitsuba);
 
-    // Shader Program
-    shaderProgram_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
-    // GPU Resource
-    constantBufferList_.resize(NUM_OF_CONSTANT_BUFFER);
-    glCreateBuffers(constantBufferList_.size(), constantBufferList_.data());
-    StaticConstantBuffer staticConstantBuffer;
-    staticConstantBuffer.viewToProjection = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution) / yResolution, 0.001f, 1000.0f);
-    glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
-    glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
-    glNamedBufferStorage(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], sizeof(PerObjectConstantBuffer), nullptr, GL_DYNAMIC_STORAGE_BIT);
-    
-    for (int i = 0; i < constantBufferList_.size(); i++) {
-        glBindBufferBase(GL_UNIFORM_BUFFER, i, constantBufferList_[i]);
-    }
-    
-    glCreateSamplers(1, &samplerID_);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(samplerID_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindSampler(0, samplerID_);
+    bronzeMetal_.reset(new Material("bronze_copper"));
+    masterRenderer_.Startup(xResolution, yResolution);
 
-    glCreateSamplers(1, &materialSamplerID_);
-    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(materialSamplerID_, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glBindSampler(3, materialSamplerID_);
-    glBindSampler(4, materialSamplerID_);
-    glBindSampler(5, materialSamplerID_);
-    
-    {
-        auto dib = FreeImage_Load(FIF_EXR, "../../Resources/Environment/dfg.exr");
-        auto w = FreeImage_GetWidth(dib);
-        auto h = FreeImage_GetHeight(dib);
-        std::cerr << w << "," << h << std::endl;
-        auto bits = FreeImage_GetBits(dib);
-        glCreateTextures(GL_TEXTURE_2D, 1, &dfgTexture_);
-        glTextureStorage2D(dfgTexture_, 1, GL_RGB16F, w, h);
-        glTextureSubImage2D(dfgTexture_, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, bits);
-        FreeImage_Unload(dib);
-        glBindTextureUnit(0, dfgTexture_);
-    }
-    bronzeMetal_ = new Material("bronze_copper");
-    bronzeMetal_->Use();
-    //cubemap
-    diffuseCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_diffuse");
-    diffuseCubemap_->BindTextureUint(1);
-    specularCubemap_ = new Cubemap("../../Resources/Environment/uffizi", "uffizi_specular");
-    specularCubemap_->BindTextureUint(2);
+    batchOfStationaryEntity_.entityList_.emplace_back();
+    auto&& e0 = batchOfStationaryEntity_.entityList_.back();
+    e0.position_ = Float3(0, -2, -10);
+    e0.scale_ = Float3(2.0);
+    e0.models_[bronzeMetal_].emplace_back(mitsuba);
+    batchOfStationaryEntity_.entityList_.emplace_back();
+    auto&& e1 = batchOfStationaryEntity_.entityList_.back();
+    e1.position_ = Float3(4, -2, -10);
+    e1.scale_ = Float3(1.5);
+    e1.models_[bronzeMetal_].emplace_back(mitsuba);
     return true;
 }
 
 void Shiny::Game::Update(float deltaTime, const Input* input)
 {
-    testFloat_ += deltaTime;
-    if (input->Fire0()) {
-        testMetallic_ = 0.0f;
-    } else if (input->Test()) {
-        testMetallic_ = 1.0f;
-    }
-    if (input->Jump()) {
-        testDominant_ = 1.0f;
-    } else {
-        testDominant_ = 0.0f;
-    }
+    masterRenderer_.Update(deltaTime);
+    Render();
 }
 
 void Shiny::Game::Render()
 {
-    //testFloat_ = 0;
-    auto sinTheta = std::sinf(DegreesToRadians(testFloat_ * 6.0f));
-    auto cosTheta = std::cosf(DegreesToRadians(testFloat_ * 6.0f));
-    Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
-    auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
-    perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = Matrix4x4(1.0f);
-    glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    shaderProgram_.Use();
-    PerObjectConstantBuffer perObjectBuffer;
-    for (auto&& mesh : meshes_) {
-        const int meshCount = 0;
-        for (int i = 0; i <= meshCount; i++) {
-            auto smoothness = 1.0f - i / (float)meshCount;
-            //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0,-2, -8)) * MakeScaleMatrix(2.0, 2.0, 2.0) * QuaternionToMatrix(Normalize(quat));// ;
-            perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
-            glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
-            mesh.Render();
-        }
-    }
+    masterRenderer_.Render(batchOfStationaryEntity_);
 }
 
 void Shiny::Game::Shutdown()
 {
-    glDeleteBuffers(constantBufferList_.size(), constantBufferList_.data());
-    delete specularCubemap_;
-    delete diffuseCubemap_;
-    delete bronzeMetal_;
 }

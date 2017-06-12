@@ -118,4 +118,11 @@ inline Matrix4x4 MakeScaleMatrix(float x, float y, float z)
                      0.0f, 0.0f, z, 0.0f,
                      0.0f, 0.0f, 0.0f, 1.0f);
 }
+/*
+Scale By Vector3f
+*/
+inline Matrix4x4 MakeScaleMatrix(const Float3& vector3f)
+{
+    return MakeScaleMatrix(vector3f.x, vector3f.y, vector3f.z);
+}
 }

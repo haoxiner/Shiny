@@ -3,7 +3,8 @@
 #include "Mesh.h"
 #include "Material.h"
 #include <vector>
-#include <utility>
+#include <memory>
+#include <map>
 namespace Shiny
 {
 class Entity
@@ -12,6 +13,6 @@ public:
     Float3 position_;
     Float3 rotation_;
     Float3 scale_;
-    std::vector<std::pair<Mesh*, Material*>> models_;
+    std::map<std::shared_ptr<Material>, std::vector<std::shared_ptr<Mesh>>> models_;
 };
 }

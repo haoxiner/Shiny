@@ -34,7 +34,6 @@ int TestDisplay()
         performanceTimer.Tick();
         deltaTime = performanceTimer.GetDeltaTime();
         game.Update(deltaTime, input);
-        game.Render();
         display.Update();
         if (input->Quit()) {
             display.Shutdown();
@@ -62,8 +61,8 @@ void TestPreIntegrator()
     }
     
     Shiny::PreIntegrator preIntegrator;
-    preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
-    //preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
+    //preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
+    preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
 }
 int main()
 {

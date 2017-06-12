@@ -2,6 +2,7 @@
 #include "BatchOfStationaryEntity.h"
 #include "Cubemap.h"
 #include "ShaderProgram.h"
+#include "SkyBox.h"
 #include "MathUtil.h"
 #include "Platform.h"
 #include <string>
@@ -14,12 +15,15 @@ public:
     bool Startup(int xResolution, int yResolution);
     void Shutdown();
     void SetupEnvironment(const std::string& name);
-    void Update(float deltaTime) { deltaTime_ = deltaTime; }
+
+    void RenderSky(SkyBox& skyBox);
+    void Update(float deltaTime);
     void Render(BatchOfStationaryEntity& batch);
 private:
     float deltaTime_ = 0.0f;
 private:
     ShaderProgram stationaryEntityShader_;
+    ShaderProgram skyBoxShader_;
     GLuint dfgTextureID_;
     GLuint defaultSamplerID_;
     GLuint repeatSamplerID_;

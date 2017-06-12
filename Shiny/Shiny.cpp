@@ -14,8 +14,8 @@
 
 int TestDisplay()
 {
-    constexpr int xResolution = 1440;
-    constexpr int yResolution = 900;
+    constexpr int xResolution = 1024;
+    constexpr int yResolution = 768;
     Shiny::Display display;
     if (!display.Startup(xResolution, yResolution, true)) {
         return 1;
@@ -61,8 +61,8 @@ void TestPreIntegrator()
     }
     
     Shiny::PreIntegrator preIntegrator;
-    //preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
-    preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
+    preIntegrator.IntegrateIBLDFG("dfg", "../../Resources/Environment");
+    //preIntegrator.IntegrateIBLDiffuseAndSpecular("../../Resources/Environment/uffizi/src", "uffizi", "../../Resources/Environment/uffizi", "uffizi");
 }
 int main()
 {

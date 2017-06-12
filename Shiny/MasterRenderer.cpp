@@ -30,6 +30,13 @@ bool MasterRenderer::Startup(int xResolution, int yResolution)
     xResolution_ = xResolution;
     yResolution_ = yResolution;
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    glViewport(0, 0, xResolution, yResolution);
+
     glCreateSamplers(1, &defaultSamplerID_);
     glSamplerParameteri(defaultSamplerID_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(defaultSamplerID_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -50,6 +57,7 @@ bool MasterRenderer::Startup(int xResolution, int yResolution)
     SetupEnvironment("uffizi");
 
     stationaryEntityShader_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
+    skyBoxShader_.Startup(ResourceManager::ReadFileToString("./Shaders/SkyBox.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/SkyBox.frag.glsl"));
     return true;
 }
 void MasterRenderer::Shutdown()
@@ -66,9 +74,15 @@ void MasterRenderer::SetupEnvironment(const std::string& name)
     specularCubemap_.reset(new Cubemap("../../Resources/Environment/" + name, name + "_specular"));
     specularCubemap_->BindTextureUint(2);
 }
-void MasterRenderer::Render(BatchOfStationaryEntity& batch)
+void MasterRenderer::RenderSky(SkyBox& skyBox)
+{
+    skyBoxShader_.Use();
+    skyBox.Render();
+}
+void MasterRenderer::Update(float deltaTime)
 {
     static auto testFloat = 0.0f;
+    deltaTime_ = deltaTime;
     testFloat += deltaTime_;
     //testFloat_ = 0;
     auto sinTheta = std::sinf(DegreesToRadians(testFloat * 6.0f));
@@ -76,16 +90,22 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
     Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = Matrix4x4(1.0f);
+    perFrameBuffer->worldToView = Matrix4x4(1.0f)*QuaternionToMatrix(Normalize(quat));
     glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+void MasterRenderer::Render(BatchOfStationaryEntity& batch)
+{   
     stationaryEntityShader_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     //perObjectBuffer.modelToWorld = MakeTranslationMatrix(Float3(0, 0, -15)) * MakeTranslationMatrix(Float3(i * 2.2f - 11, 0, 0)) * QuaternionToMatrix(Normalize(quat));// ;
     //perObjectBuffer.material0 = Float4(smoothness, testMetallic_, testDominant_, 0.0f);
+    
+    glBindTextureUnit(0, dfgTextureID_);
+    glBindSampler(0, defaultSamplerID_);
+    diffuseCubemap_->BindTextureUint(1);
+    specularCubemap_->BindTextureUint(2);
     for (auto&& entity : batch.entityList_) {
-        perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) * QuaternionToMatrix(Normalize(quat));// ;
+        perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_);// *QuaternionToMatrix(Normalize(quat));// ;
         glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
         for (auto&& pair : entity.models_) {
             auto material = pair.first;

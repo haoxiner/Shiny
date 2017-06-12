@@ -228,8 +228,8 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	// roughness = material0.x;
-	// metallic = material0.y;
+	// roughness = 0.9;
+	// metallic = 1.0;
 	// alphaG = roughness * roughness;
 	// baseColor = vec3(1.0, 1.0, 1.0);
 
@@ -239,35 +239,29 @@ void main()
 	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;
 	vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
 
-	float NdotV = dot(N, V);
+	float NdotV = abs(dot(N, V));
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, alphaG, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, alphaG);
-	fragColor.xyz += (diffuse + specular);
+	fragColor.xyz += (diffuse + specular) * 0.25;
 
 ////////////////////// Test Analytic Light ///////////////////////
-	// This code is an example of call of previous functions
-	NdotV = abs(NdotV) + 1e-5; // avoid artifact
+	NdotV = NdotV + 1e-5; // avoid artifact
+	vec3 pointLight = vec3(100.0,100.0,100.0) - position;
+	L = normalize(pointLight);
 	vec3 H = normalize(V + L);
 	float LdotH = Saturate(dot(L, H));
 	float NdotH = Saturate(dot(N, H));
 	float NdotL = Saturate(dot(N, L));
-
 	// Specular BRDF
 	vec3 F = F_Schlick(f0, f90, LdotH);
 	float Vis = V_SmithGGXCorrelated(NdotV , NdotL , alphaG);
 	float D = D_GGX(NdotH , alphaG);
 	vec3 Fr = D * F * Vis / PI;
-
 	// Diffuse BRDF
 	float Fd = Fr_DisneyDiffuse(NdotV , NdotL , LdotH , roughness).r / PI;
-	vec3 pointLight = vec3(20.0,20.0,20.0) - position;
-	// fragColor.xyz = vec3(500, 250, 100) * (Fr + diffuseColor * Fd) / dot(pointLight, pointLight);
-
+	
+	fragColor.xyz += vec3(10000, 10000, 10000) * (Fr + diffuseColor * Fd) / dot(pointLight, pointLight);
 //////////////////////////////////////////////////////////////////
-
-	
-
-	
 
 	float exposure = 2.5;
 	fragColor *= exposure;

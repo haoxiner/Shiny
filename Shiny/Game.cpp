@@ -14,9 +14,6 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     //ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", *meshes_[0]);
     meshes_[0]->LoadStandardPackage("mitsuba");
 
-    //meshes_.emplace_back(std::make_shared<Mesh>(2));
-    //ResourceManager::LoadObjToMesh("../../Resources/Model/sphere.obj", *meshes_[1]);
-
     bronzeMetal_.reset(new Material("bronze_copper"));
     
     batchOfStationaryEntity_.entityList_.emplace_back();

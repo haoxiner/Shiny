@@ -88,10 +88,17 @@ void Shiny::Mesh::LoadIndices(const std::vector<unsigned int>& indices)
 
 struct VertexDescription
 {
-    int numOfChannel;
-    GLenum type;
-    bool normalized;
-    int size;
+    int numOfChannel_;
+    GLenum type_;
+    bool normalized_;
+    int size_;
+    VertexDescription(int numOfChannel,
+                      GLenum type,
+                      bool normalized,
+                      int size) : 
+        numOfChannel_(numOfChannel), type_(type), normalized_(normalized), size_(size)
+    {
+    }
 };
 void Shiny::Mesh::LoadStandardPackage(const std::string& name)
 {
@@ -122,15 +129,19 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
     inputFileStream.read(indexData.data(), indexDataLength);
     inputFileStream.close();
 
-    const std::vector<VertexDescription> vertexDescList = {
+    std::vector<VertexDescription> vertexDescList = {
         { 3, GL_FLOAT, false, 3 * sizeof(float) }, // position: float3
         { 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // normal: int 2_10_10_10
-        //{ 3, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // binormal: int 2_10_10_10
+        { 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // binormal: int 2_10_10_10
         { 2, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 2 } // texcoord: unsigned short2
     };
+    if (hasSkeleton) {
+        vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 4);
+        vertexDescList.emplace_back(4, GL_SHORT, true, sizeof(short) * 4);
+    }
     int stride = 0;// 40;
     for (const auto& desc : vertexDescList) {
-        stride += desc.size;
+        stride += desc.size_;
     }
     std::cerr << "stride" << stride << std::endl;
     glNamedBufferStorage(vboList_[0], vertexData.size(), vertexData.data(), 0);
@@ -138,8 +149,8 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
     for (int index = 0, relativeOffset = 0; index < vertexDescList.size(); index++) {
         const auto& desc = vertexDescList[index];
         glEnableVertexArrayAttrib(vao_, index);
-        glVertexArrayAttribFormat(vao_, index, desc.numOfChannel, desc.type, desc.normalized, relativeOffset);
-        relativeOffset += desc.size;
+        glVertexArrayAttribFormat(vao_, index, desc.numOfChannel_, desc.type_, desc.normalized_, relativeOffset);
+        relativeOffset += desc.size_;
         glVertexArrayAttribBinding(vao_, index, 0);
         std::cerr << "relative: " << relativeOffset << std::endl;
     }

@@ -16,8 +16,10 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 
     bronzeMetal_.reset(new Material("bronze_copper"));
     
-    batchOfStationaryEntity_.entityList_.emplace_back();
-    auto& e0 = batchOfStationaryEntity_.entityList_.back();
+    animation_.reset(new Animation("prototype"));
+
+    batchOfAnimatedEntity_.batch_[animation_].emplace_back();
+    auto& e0 = batchOfAnimatedEntity_.batch_[animation_].back();
     e0.position_ = Float3(0, -10, -20);
     e0.scale_ = Float3(0.1);
     e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
@@ -42,7 +44,7 @@ void Shiny::Game::Update(float deltaTime, const Input* input)
 void Shiny::Game::Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    masterRenderer_.Render(batchOfStationaryEntity_);
+    masterRenderer_.Render(batchOfAnimatedEntity_);
     masterRenderer_.RenderSky(*skyBox_);
 }
 

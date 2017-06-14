@@ -179,6 +179,7 @@
     <ClInclude Include="VertexAttributeDescription.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Display.cpp" />

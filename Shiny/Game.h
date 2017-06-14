@@ -23,5 +23,7 @@ private:
     std::shared_ptr<SkyBox> skyBox_;
     MasterRenderer masterRenderer_;
     BatchOfStationaryEntity batchOfStationaryEntity_;
+    BatchOfAnimatedEntity batchOfAnimatedEntity_;
+    std::shared_ptr<Animation> animation_;
 };
 }

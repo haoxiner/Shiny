@@ -70,7 +70,8 @@ int main()
 {
     //TestPreIntegrator();
     using namespace Shiny;
-    TestDisplay();
     //ResourceManager::WriteObjToSPK("../../Resources/Model/prototype.obj", "../../Resources/Model/prototype.bin");
+
+    TestDisplay();
     return 0;
 }

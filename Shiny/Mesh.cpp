@@ -137,7 +137,7 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
     };
     if (hasSkeleton) {
         vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);
-        vertexDescList.emplace_back(4, GL_SHORT, true, sizeof(short) * 4);
+        vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 4);
     }
     int stride = 0;// 40;
     for (const auto& desc : vertexDescList) {
@@ -149,7 +149,12 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
     for (int index = 0, relativeOffset = 0; index < vertexDescList.size(); index++) {
         const auto& desc = vertexDescList[index];
         glEnableVertexArrayAttrib(vao_, index);
-        glVertexArrayAttribFormat(vao_, index, desc.numOfChannel_, desc.type_, desc.normalized_, relativeOffset);
+        if (desc.type_ == GL_UNSIGNED_SHORT && !desc.normalized_) {
+            std::cerr << index << ": BONE ID SUBMITING" << ": " << desc.numOfChannel_ << std::endl;
+            glVertexArrayAttribIFormat(vao_, index, desc.numOfChannel_, desc.type_, relativeOffset);
+        } else {
+            glVertexArrayAttribFormat(vao_, index, desc.numOfChannel_, desc.type_, desc.normalized_, relativeOffset);
+        }
         relativeOffset += desc.size_;
         glVertexArrayAttribBinding(vao_, index, 0);
         std::cerr << "relative: " << relativeOffset << std::endl;

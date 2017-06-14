@@ -16,6 +16,7 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 {
 	mat4 modelToWorld;
 	vec4 material0;
+	int animationFrameID;
 };
 
 layout(binding = 0) uniform sampler2D dfgMap;
@@ -221,7 +222,7 @@ void main()
 	vec3 V = normalize(-position);
 	vec3 N = normalize(normal);
 	
-	vec2 uv = texCoord * 4.0;
+	vec2 uv = texCoord * 2.0;
 
 	float roughness = texture(roughnessMap, uv).r;
 	float alphaG = roughness * roughness;

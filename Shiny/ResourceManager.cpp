@@ -70,15 +70,19 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
     std::vector<tinyobj::material_t> materials;
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFileName.c_str());
     
-    int numOfVertices = shapes[0].mesh.indices.size();
-    std::cerr << "NUM OF VERTICES: " << numOfVertices << std::endl;
-    std::ifstream skin("../../Resources/Model/prototype.skin");
+    int numOfVertices = 23297;
+    std::cerr << "NUM OF VERTICES: " << attrib.vertices.size() / 3 << std::endl;
+    std::ifstream skin("../../Resources/Model/prototype.skin", std::ios::binary);
+
     std::vector<int> boneIDList(numOfVertices * 4);
     std::vector<float> boneWeightList(numOfVertices * 4);
     skin.read((char*)boneIDList.data(), sizeof(int)*boneIDList.size());
     skin.read((char*)boneWeightList.data(), sizeof(float)*boneWeightList.size());
+
     skin.close();
 
+    std::vector<bool> boneVisit(boneIDList.size(), false);
+    std::ofstream log(spkFileName + ".log");
     std::vector<int> indices;
     //std::vector<float> vertexAttribute0, vertexAttribute1;
     std::ofstream output(spkFileName, std::ios::binary);
@@ -101,12 +105,17 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
                 unsigned short bone[4] = { 0 };
                 for (int i = 0; i < 4; i++) {
                     bone[i] = static_cast<unsigned short>(boneIDList[4 * idx.vertex_index + i]);
+                    
                 }
+                
                 unsigned short weight[4] = { 0 };
                 for (int i = 0; i < 4; i++) {
-                    weight[i] = MapToShort(boneWeightList[4 * idx.vertex_index + i]);
+                    weight[i] = MapToUnsignedShort(boneWeightList[4 * idx.vertex_index + i]);
                 }
-
+                for (int i = 0; i < 4; i++) {
+                    log << bone[i] << ": " << weight[i] << ", ";
+                }
+                log << std::endl;
                 indices.push_back(indices.size());
                 //indices.push_back(vertexAttribute0.size() / 4);
                 //vertexAttribute0.push_back((vx));

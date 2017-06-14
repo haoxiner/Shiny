@@ -3,6 +3,7 @@
 #include "MathUtil.h"
 #include <vector>
 #include <iostream>
+#include <memory>
 
 std::string Shiny::ResourceManager::ReadFileToString(const std::string& fileName)
 {
@@ -62,6 +63,35 @@ bool Shiny::ResourceManager::LoadObjToMesh(const std::string& fileName, Mesh& me
     mesh.LoadVertexAttribute(1, 4, vertexAttribute1);
     return true;
 }
+
+namespace Shiny
+{
+struct Vertex
+{
+    float px;
+    float py;
+    float pz;
+    Int_2_10_10_10 n;
+    unsigned short tx;
+    unsigned short ty;
+};
+struct SkinnedVertex
+{
+    float px;
+    float py;
+    float pz;
+    Int_2_10_10_10 n;
+    unsigned short tx;
+    unsigned short ty;
+    unsigned short bone[4];
+    unsigned short weight[4];
+    bool operator<(const SkinnedVertex& rhs) const
+    {
+        return std::memcmp((void*)this, (void*)&rhs, sizeof(SkinnedVertex)) < 0;
+    };
+};
+}
+
 void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const std::string& spkFileName)
 {
     tinyobj::attrib_t attrib;
@@ -78,13 +108,13 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
     std::vector<float> boneWeightList(numOfVertices * 4);
     skin.read((char*)boneIDList.data(), sizeof(int)*boneIDList.size());
     skin.read((char*)boneWeightList.data(), sizeof(float)*boneWeightList.size());
-
     skin.close();
 
-    std::vector<bool> boneVisit(boneIDList.size(), false);
-    std::ofstream log(spkFileName + ".log");
+    // combine equal vertices
+    std::map<SkinnedVertex, int> vertexMap;
+    std::vector<SkinnedVertex> outputVertices;
+
     std::vector<int> indices;
-    //std::vector<float> vertexAttribute0, vertexAttribute1;
     std::ofstream output(spkFileName, std::ios::binary);
     int offset = 0;
     for (size_t s = 0; s < 1; s++) {
@@ -101,60 +131,32 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
                 float nz = attrib.normals[3 * idx.normal_index + 2];
                 float tx = attrib.texcoords[2 * idx.texcoord_index + 0];
                 float ty = attrib.texcoords[2 * idx.texcoord_index + 1];
-
-                unsigned short bone[4] = { 0 };
+                SkinnedVertex vertex = {
+                    vx,vy,vz,
+                    PackFloat3ToInt2_10_10_10({ nx,ny,nz }),
+                    MapToUnsignedShort(tx), MapToUnsignedShort(ty)
+                };
                 for (int i = 0; i < 4; i++) {
-                    bone[i] = static_cast<unsigned short>(boneIDList[4 * idx.vertex_index + i]);
-                    
-                }
-                
-                unsigned short weight[4] = { 0 };
-                for (int i = 0; i < 4; i++) {
-                    weight[i] = MapToUnsignedShort(boneWeightList[4 * idx.vertex_index + i]);
+                    vertex.bone[i] = static_cast<unsigned short>(boneIDList[4 * idx.vertex_index + i]);
                 }
                 for (int i = 0; i < 4; i++) {
-                    log << bone[i] << ": " << weight[i] << ", ";
+                    vertex.weight[i] = MapToUnsignedShort(boneWeightList[4 * idx.vertex_index + i]);
                 }
-                log << std::endl;
-                indices.push_back(indices.size());
-                //indices.push_back(vertexAttribute0.size() / 4);
-                //vertexAttribute0.push_back((vx));
-                //vertexAttribute0.push_back((vy));
-                //vertexAttribute0.push_back((vz));
-                //vertexAttribute0.push_back((tx));
-
-                //vertexAttribute1.push_back((nx));
-                //vertexAttribute1.push_back((ny));
-                //vertexAttribute1.push_back((nz));
-                //vertexAttribute1.push_back((ty));
-
-                // position
-                output.write((char*)&vx, sizeof(vx));
-                output.write((char*)&vy, sizeof(vy));
-                output.write((char*)&vz, sizeof(vz));
-
-                short i16;
-                unsigned short u16;
-                Int_2_10_10_10 int2_10_10_10;
-                UInt_2_10_10_10 uint2_10_10_10;
-
-                // normal
-                int2_10_10_10 = PackFloat3ToInt2_10_10_10({ nx,ny,nz });
-                output.write((char*)&int2_10_10_10, sizeof(int2_10_10_10));
-                // texcoord
-                u16 = MapToUnsignedShort(tx);
-                output.write((char*)&u16, sizeof(u16));
-                u16 = MapToUnsignedShort(ty);
-                output.write((char*)&u16, sizeof(u16));
-                // bone ID
-                output.write((char*)bone, sizeof(bone));
-                // bone weight
-                output.write((char*)weight, sizeof(weight));
-                offset += (sizeof(vx) * 3 + sizeof(int2_10_10_10) + sizeof(u16) * (2 + 4 + 4));
+                auto vMapIter = vertexMap.find(vertex);
+                if (vMapIter == vertexMap.end()) {
+                    int index = static_cast<int>(outputVertices.size());
+                    indices.emplace_back(index);
+                    vertexMap[vertex] = index;
+                    outputVertices.emplace_back(vertex);
+                } else {
+                    indices.emplace_back(vMapIter->second);
+                }
             }
             index_offset += fv;
         }
     }
+    output.write((char*)outputVertices.data(), sizeof(SkinnedVertex) * outputVertices.size());
+    offset += sizeof(SkinnedVertex) * outputVertices.size();
     std::cerr << "length/offset: " << offset << std::endl;
     output.write((char*)indices.data(), sizeof(int)*indices.size());
     int start = offset;

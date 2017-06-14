@@ -200,7 +200,9 @@
     <ClCompile Include="SkyBox.cpp">
       <Filter>RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="Animation.cpp">
+      <Filter>RenderEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\PBR.frag.glsl">

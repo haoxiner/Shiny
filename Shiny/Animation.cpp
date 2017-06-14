@@ -7,14 +7,14 @@
 Shiny::Animation::Animation(const std::string& name)
 {
     glCreateBuffers(1, &animationFrameBufferID_);
-    std::ifstream inputFileStream("../../Resources/Model/prototype.anim", std::ios::binary);
+    std::ifstream inputFileStream("../../Resources/Model/bin.anim", std::ios::binary);
 
     std::streampos fsize = 0;
     auto fstart = inputFileStream.tellg();
     inputFileStream.seekg(0, std::ios::end);
     fsize = inputFileStream.tellg() - fstart;
 
-    inputFileStream.seekg(std::ios::beg);
+    inputFileStream.seekg(0, std::ios::beg);
 
     std::vector<Float4> data(3 * 60 * 21);
     std::cerr << "ANIM BEGIN" << std::endl;

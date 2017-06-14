@@ -62,7 +62,6 @@ bool Shiny::ResourceManager::LoadObjToMesh(const std::string& fileName, Mesh& me
     mesh.LoadVertexAttribute(1, 4, vertexAttribute1);
     return true;
 }
-
 void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const std::string& spkFileName)
 {
     tinyobj::attrib_t attrib;
@@ -71,8 +70,17 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
     std::vector<tinyobj::material_t> materials;
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFileName.c_str());
     
+    int numOfVertices = shapes[0].mesh.indices.size();
+    std::cerr << "NUM OF VERTICES: " << numOfVertices << std::endl;
+    std::ifstream skin("../../Resources/Model/prototype.skin");
+    std::vector<int> boneIDList(numOfVertices * 4);
+    std::vector<float> boneWeightList(numOfVertices * 4);
+    skin.read((char*)boneIDList.data(), sizeof(int)*boneIDList.size());
+    skin.read((char*)boneWeightList.data(), sizeof(float)*boneWeightList.size());
+    skin.close();
+
     std::vector<int> indices;
-    std::vector<float> vertexAttribute0, vertexAttribute1;
+    //std::vector<float> vertexAttribute0, vertexAttribute1;
     std::ofstream output(spkFileName, std::ios::binary);
     int offset = 0;
     for (size_t s = 0; s < 1; s++) {
@@ -90,17 +98,28 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
                 float tx = attrib.texcoords[2 * idx.texcoord_index + 0];
                 float ty = attrib.texcoords[2 * idx.texcoord_index + 1];
 
-                indices.push_back(vertexAttribute0.size() / 4);
-                vertexAttribute0.push_back((vx));
-                vertexAttribute0.push_back((vy));
-                vertexAttribute0.push_back((vz));
-                vertexAttribute0.push_back((tx));
+                unsigned short bone[4] = { 0 };
+                for (int i = 0; i < 4; i++) {
+                    bone[i] = static_cast<unsigned short>(boneIDList[4 * idx.vertex_index + i]);
+                }
+                unsigned short weight[4] = { 0 };
+                for (int i = 0; i < 4; i++) {
+                    weight[i] = MapToShort(boneWeightList[4 * idx.vertex_index + i]);
+                }
 
-                vertexAttribute1.push_back((nx));
-                vertexAttribute1.push_back((ny));
-                vertexAttribute1.push_back((nz));
-                vertexAttribute1.push_back((ty));
+                indices.push_back(indices.size());
+                //indices.push_back(vertexAttribute0.size() / 4);
+                //vertexAttribute0.push_back((vx));
+                //vertexAttribute0.push_back((vy));
+                //vertexAttribute0.push_back((vz));
+                //vertexAttribute0.push_back((tx));
 
+                //vertexAttribute1.push_back((nx));
+                //vertexAttribute1.push_back((ny));
+                //vertexAttribute1.push_back((nz));
+                //vertexAttribute1.push_back((ty));
+
+                // position
                 output.write((char*)&vx, sizeof(vx));
                 output.write((char*)&vy, sizeof(vy));
                 output.write((char*)&vz, sizeof(vz));
@@ -110,14 +129,19 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
                 Int_2_10_10_10 int2_10_10_10;
                 UInt_2_10_10_10 uint2_10_10_10;
 
+                // normal
                 int2_10_10_10 = PackFloat3ToInt2_10_10_10({ nx,ny,nz });
                 output.write((char*)&int2_10_10_10, sizeof(int2_10_10_10));
+                // texcoord
                 u16 = MapToUnsignedShort(tx);
                 output.write((char*)&u16, sizeof(u16));
                 u16 = MapToUnsignedShort(ty);
                 output.write((char*)&u16, sizeof(u16));
-
-                offset += (sizeof(vx) * 3 + sizeof(int2_10_10_10) + sizeof(u16) * 2);
+                // bone ID
+                output.write((char*)bone, sizeof(bone));
+                // bone weight
+                output.write((char*)weight, sizeof(weight));
+                offset += (sizeof(vx) * 3 + sizeof(int2_10_10_10) + sizeof(u16) * (2 + 4 + 4));
             }
             index_offset += fv;
         }

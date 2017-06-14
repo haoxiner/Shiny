@@ -132,11 +132,11 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
     std::vector<VertexDescription> vertexDescList = {
         { 3, GL_FLOAT, false, 3 * sizeof(float) }, // position: float3
         { 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // normal: int 2_10_10_10
-        { 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // binormal: int 2_10_10_10
+        //{ 4, GL_INT_2_10_10_10_REV, true, sizeof(Int_2_10_10_10) }, // binormal: int 2_10_10_10
         { 2, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 2 } // texcoord: unsigned short2
     };
     if (hasSkeleton) {
-        vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 4);
+        vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);
         vertexDescList.emplace_back(4, GL_SHORT, true, sizeof(short) * 4);
     }
     int stride = 0;// 40;

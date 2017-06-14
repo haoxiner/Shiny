@@ -12,14 +12,14 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 
     meshes_.emplace_back(std::make_shared<Mesh>(1));
     //ResourceManager::LoadObjToMesh("../../Resources/Model/mitsuba.obj", *meshes_[0]);
-    meshes_[0]->LoadStandardPackage("mitsuba");
+    meshes_[0]->LoadStandardPackage("prototype");
 
     bronzeMetal_.reset(new Material("bronze_copper"));
     
     batchOfStationaryEntity_.entityList_.emplace_back();
     auto& e0 = batchOfStationaryEntity_.entityList_.back();
-    e0.position_ = Float3(0, -2, -5);
-    e0.scale_ = Float3(2.0);
+    e0.position_ = Float3(0, -10, -20);
+    e0.scale_ = Float3(0.1);
     e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
 
     //batchOfStationaryEntity_.entityList_.emplace_back();

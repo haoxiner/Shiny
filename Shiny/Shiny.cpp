@@ -71,6 +71,6 @@ int main()
     //TestPreIntegrator();
     using namespace Shiny;
     TestDisplay();
-    //ResourceManager::WriteObjToSPK("../../Resources/Model/mitsuba.obj", "../../Resources/Model/mitsuba.bin");
+    //ResourceManager::WriteObjToSPK("../../Resources/Model/prototype.obj", "../../Resources/Model/prototype.bin");
     return 0;
 }

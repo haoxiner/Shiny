@@ -126,6 +126,9 @@
     <ClInclude Include="SkyBox.h">
       <Filter>RenderEngine</Filter>
     </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">

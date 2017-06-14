@@ -127,7 +127,7 @@ const Shiny::Json::JsonValue* Shiny::Json::JsonValue::AsJsonArray() const
     if (type_ >= JSON_ARRAY) {
         return (*(data_.array)).data();
     }
-    return nullptr;
+    return &JsonValue::NULL_OBJECT;
 }
 
 const Shiny::Json::JsonObject* Shiny::Json::JsonValue::AsJsonObject() const

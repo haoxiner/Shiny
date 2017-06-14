@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="BatchOfAnimatedEntity.h" />
     <ClInclude Include="BatchOfStaticEntity.h" />
     <ClInclude Include="BatchOfStationaryEntity.h" />

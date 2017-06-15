@@ -137,7 +137,7 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
         auto& entities = animEntityPair.second;
         for (auto&& entity : entities) {
             perObjectBuffer.animationState.x = (int(animID) % 21) * 3 * 60;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_);// ;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) * QuaternionToMatrix(Normalize(entity.rotation_));// ;
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             for (auto&& pair : entity.models_) {
                 auto material = pair.first;
@@ -164,7 +164,7 @@ void MasterRenderer::SetupConstantBuffers()
         0, 0, 0, 1
     );
     staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 10.0f, 1000.0f);
-    staticConstantBuffer.viewToProjectionForZup = staticConstantBuffer.viewToProjectionForYup * Rotate90degreeAboutXAxis;
+    staticConstantBuffer.viewToProjectionForZup = staticConstantBuffer.viewToProjectionForYup/* * Rotate90degreeAboutXAxis*/;
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
     glNamedBufferStorage(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], sizeof(PerObjectConstantBuffer), nullptr, GL_DYNAMIC_STORAGE_BIT);

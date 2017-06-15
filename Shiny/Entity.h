@@ -11,7 +11,7 @@ class Entity
 {
 public:
     Float3 position_;
-    Float3 rotation_;
+    Quaternion rotation_;
     Float3 scale_;
     std::map<std::shared_ptr<Material>, std::vector<std::shared_ptr<Mesh>>> models_;
 };

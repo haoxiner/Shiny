@@ -54,6 +54,24 @@ inline Quaternion Normalize(const Quaternion& quaternion)
 {
     return Quaternion(glm::normalize(quaternion));
 }
+inline Float3 Normalize(const Float3& v)
+{
+    return glm::normalize(v);
+}
+/*
+clamp
+*/
+inline float Clamp(float value, float low, float high)
+{
+    return std::fmaxf(std::fminf(value, high), low);
+}
+/*
+Saturate
+*/
+inline float Saturate(float value)
+{
+    return Clamp(value, 0.0f, 1.0f);
+}
 /*
     Make ViewToProjection Transform
 */

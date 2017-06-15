@@ -24,6 +24,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     e0.position_ = Float3(0, 0, 0);
     e0.scale_ = Float3(1);
     e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
+    e0.rotation_ = Float4(0,0,1,0);
 
     //batchOfStationaryEntity_.entityList_.emplace_back();
     //auto& e1 = batchOfStationaryEntity_.entityList_.back();
@@ -37,13 +38,13 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 
 void Shiny::Game::Update(float deltaTime, const Input* input)
 {
-    thirdPersonCamera_.AddForce(input->GetRightHorizontalAxis(), -input->GetRightVerticalAxis());
+    thirdPersonCamera_.AddForce(-input->GetRightHorizontalAxis(), input->GetRightVerticalAxis());
     //thirdPersonCamera_.AddForce(input->GetLeftHorizontalAxis(), input->GetLeftVerticalAxis(), 0);
 
     masterRenderer_.Update(deltaTime);
     Matrix4x4 view;
     Float3 position;
-    thirdPersonCamera_.GetPose(view, position, Float3(0.0));
+    thirdPersonCamera_.GetPose(view, position, Float3(0,0,100));
     masterRenderer_.SetCameraPose(view, position);
     Render();
 }

@@ -13,20 +13,36 @@ void Shiny::ThirdPersonCamera::GetPose(Matrix4x4& viewMatrix, Float3& cameraPosi
     float x = sinTheta * cosPhi;
     float y = sinTheta * sinPhi;
     float z = cosTheta;
-    
-    //Float3 axis = Cross(Float3(0, 1, 0), Float3(x, y, z));
-    //float angle = acos(Dot(Float3(0, 1, 0), Float3(x, y, z)));
-    //return MakeTranslationMatrix(focusPosition - Float3(20*x, 20*y,20*z)) * MakeRotationMatrix(axis, angle);
-    auto eye = focusPosition + Float3(x, y, z) * 40.0f;
-    //std::cerr << eye.x << "," << eye.y << "," << eye.z << std::endl;
-    //std::cerr << x << "," << y << "," << z << std::endl;
-    
-    cameraPosition = Float3(0, -400, 100);
-    viewMatrix = MakeTranslationMatrix(-cameraPosition);
+
+    auto Rotate90degreeAboutXAxis = Matrix4x4(
+        1, 0, 0, 0,
+        0, 0, -1, 0,
+        0, 1, 0, 0,
+        0, 0, 0, 1
+    );
+
+    cameraPosition = focusPosition + Float3(x, y, z)*300.0f;
+    const auto f(Normalize(focusPosition - cameraPosition));
+    const auto s(Normalize(Cross(f, Float3(0, 0, 1))));
+    const auto u(cross(s, f));
+
+    viewMatrix[0][0] = s.x;
+    viewMatrix[1][0] = s.y;
+    viewMatrix[2][0] = s.z;
+    viewMatrix[0][1] = u.x;
+    viewMatrix[1][1] = u.y;
+    viewMatrix[2][1] = u.z;
+    viewMatrix[0][2] = -f.x;
+    viewMatrix[1][2] = -f.y;
+    viewMatrix[2][2] = -f.z;
+    viewMatrix[3][0] = -Dot(s, cameraPosition);
+    viewMatrix[3][1] = -Dot(u, cameraPosition);
+    viewMatrix[3][2] = Dot(f, cameraPosition);
 }
 
 void Shiny::ThirdPersonCamera::AddForce(float horizontal, float vertical)
 {
+    
     phi_ += DegreesToRadians(horizontal);
-    theta_ += DegreesToRadians(vertical);
+    theta_ = Clamp(theta_ + DegreesToRadians(vertical), 1e-3f, 3.14f);
 }

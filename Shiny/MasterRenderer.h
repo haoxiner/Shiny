@@ -17,7 +17,7 @@ public:
     bool Startup(int xResolution, int yResolution);
     void Shutdown();
     void SetupEnvironment(const std::string& name);
-    void SetViewMatrix(const Matrix4x4& viewMatrix);
+    void SetCameraPose(const Matrix4x4& viewMatrix, const Float3& position);
     void RenderSky(SkyBox& skyBox);
     void Update(float deltaTime);
     void Render(BatchOfStationaryEntity& batch);

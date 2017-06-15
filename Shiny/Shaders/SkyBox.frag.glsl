@@ -4,7 +4,7 @@ out vec4 fragColor;
 layout(binding = 0) uniform samplerCube envmap;
 layout(binding = 1, std140) uniform PerFrameConstantBuffer
 {
-	vec4 data;
+	vec4 cameraPosition;
 	mat4 worldToView;
 };
 vec4 SampleCubemapForZup(samplerCube cubemap, vec3 direction)

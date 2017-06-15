@@ -138,6 +138,8 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
     if (hasSkeleton) {
         vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);
         vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 4);
+        //vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);
+        //vertexDescList.emplace_back(4, GL_FLOAT, false, sizeof(float) * 4);
     }
     int stride = 0;// 40;
     for (const auto& desc : vertexDescList) {

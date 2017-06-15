@@ -9,7 +9,7 @@ in vec2 texCoord;
 out vec4 fragColor;
 layout(binding = 1, std140) uniform PerFrameConstantBuffer
 {
-	vec4 data;
+	vec4 cameraPosition;
 	mat4 worldToView;
 };
 layout(binding = 2, std140) uniform PerObjectConstantBuffer
@@ -230,8 +230,9 @@ float Fr_DisneyDiffuse(
 void main()
 {
 	fragColor = vec4(0.0);
-	vec3 L = normalize(-position);
-	vec3 V = normalize(-position);
+	vec3 eye = cameraPosition.xyz;
+	vec3 L = normalize(eye-position);
+	vec3 V = normalize(eye-position);
 	vec3 N = normalize(normal);
 	
 	vec2 uv = texCoord * 2.0;
@@ -241,8 +242,8 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	// roughness = 0.0;
-	// metallic = 1.0;
+	// roughness = 0.2;
+	// metallic = 0.0;
 	// alphaG = roughness * roughness;
 	// baseColor = vec3(1.0, 1.0, 1.0);
 
@@ -255,7 +256,7 @@ void main()
 	float NdotV = abs(dot(N, V));
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, alphaG, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, alphaG);
-	fragColor.xyz += (diffuse + specular) * 0.25;
+	fragColor.xyz += (diffuse + specular);
 
 ////////////////////// Test Analytic Light ///////////////////////
 	NdotV = NdotV + 1e-5; // avoid artifact
@@ -273,10 +274,10 @@ void main()
 	// Diffuse BRDF
 	float Fd = Fr_DisneyDiffuse(NdotV , NdotL , LdotH , roughness).r / PI;
 	
-	fragColor.xyz += vec3(10000, 10000, 10000) * (Fr + diffuseColor * Fd) / dot(pointLight, pointLight);
+	// fragColor.xyz += vec3(10000, 10000, 10000) * (Fr + diffuseColor * Fd) / dot(pointLight, pointLight);
 //////////////////////////////////////////////////////////////////
 
-	float exposure = 2.5;
+	float exposure = 1;
 	fragColor *= exposure;
 	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
 	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);

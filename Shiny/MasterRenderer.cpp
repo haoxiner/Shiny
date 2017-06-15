@@ -12,7 +12,7 @@ struct PerObjectConstantBuffer
 };
 struct PerFrameConstantBuffer
 {
-    Float4 data;
+    Float4 eye;
     Matrix4x4 worldToView;
 };
 struct StaticConstantBuffer
@@ -33,7 +33,7 @@ bool MasterRenderer::Startup(int xResolution, int yResolution)
     yResolution_ = yResolution;
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+    glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
@@ -76,30 +76,25 @@ void MasterRenderer::SetupEnvironment(const std::string& name)
     specularCubemap_.reset(new Cubemap("../../Resources/Environment/" + name, name + "_specular"));
     specularCubemap_->BindTextureUint(2);
 }
-void MasterRenderer::SetViewMatrix(const Matrix4x4 & viewMatrix)
+void MasterRenderer::SetCameraPose(const Matrix4x4& viewMatrix, const Float3& position)
 {
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
+    perFrameBuffer->eye.x = position.x;
+    perFrameBuffer->eye.y = position.y;
+    perFrameBuffer->eye.z = position.z;
     perFrameBuffer->worldToView = viewMatrix;
     glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
 }
 void MasterRenderer::RenderSky(SkyBox& skyBox)
 {
     skyBoxShader_.Use();
+    glDepthFunc(GL_LEQUAL);
     skyBox.Render();
+    glDepthFunc(GL_LESS);
 }
 void MasterRenderer::Update(float deltaTime)
 {
-    static auto testFloat = 0.0f;
     deltaTime_ = deltaTime;
-    testFloat += deltaTime_;
-    //testFloat_ = 0;
-    auto sinTheta = std::sinf(DegreesToRadians(testFloat * 6.0f));
-    auto cosTheta = std::cosf(DegreesToRadians(testFloat * 6.0f));
-    Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
-    auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
-    perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = Matrix4x4(1.0f);
-    glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
 }
 void MasterRenderer::Render(BatchOfStationaryEntity& batch)
 {   
@@ -168,7 +163,7 @@ void MasterRenderer::SetupConstantBuffers()
         0, 1, 0, 0,
         0, 0, 0, 1
     );
-    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 0.001f, 1000.0f);
+    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 10.0f, 1000.0f);
     staticConstantBuffer.viewToProjectionForZup = staticConstantBuffer.viewToProjectionForYup * Rotate90degreeAboutXAxis;
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);

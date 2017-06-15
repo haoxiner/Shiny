@@ -5,7 +5,7 @@ namespace Shiny
 class ThirdPersonCamera
 {
 public:
-    Matrix4x4 GetViewMatrix(const Float3& focusPosition) const;
+    void GetPose(Matrix4x4& viewMatrix, Float3& cameraPosition, const Float3& focusPosition);
     void AddForce(float horizontal, float vertical);
 private:
     static const float DEFAULT_THETA;

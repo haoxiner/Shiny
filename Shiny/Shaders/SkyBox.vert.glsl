@@ -8,7 +8,7 @@ layout(binding = 0, std140) uniform StaticConstantBuffer
 };
 layout(binding = 1, std140) uniform PerFrameConstantBuffer
 {
-	vec4 data;
+	vec4 cameraPosition;
 	mat4 worldToView;
 };
 layout(binding = 2, std140) uniform PerObjectConstantBuffer

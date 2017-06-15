@@ -24,7 +24,7 @@ layout(binding = 0, std140) uniform StaticConstantBuffer
 };
 layout(binding = 1, std140) uniform PerFrameConstantBuffer
 {
-	vec4 data;
+	vec4 cameraPosition;
 	mat4 worldToView;
 };
 layout(binding = 2, std140) uniform PerObjectConstantBuffer
@@ -45,6 +45,8 @@ void main()
 		vec4 boneTransform[3];
 		for (int j = 0; j < 3; j++) {
 			boneTransform[j] = animationFrame[frameOffset + boneID[i]*3 + j];
+			// boneTransform[j] = vec4(0.0);
+			// boneTransform[j][j] = 1.0;
 		}
 		position += boneWeight[i] * vec3(dot(P, boneTransform[0]), dot(P, boneTransform[1]), dot(P, boneTransform[2]));
 		normal += boneWeight[i] * vec3(dot(N, boneTransform[0]), dot(N, boneTransform[1]), dot(N, boneTransform[2]));

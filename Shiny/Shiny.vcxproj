@@ -147,6 +147,7 @@
     <ClInclude Include="BatchOfStaticEntity.h" />
     <ClInclude Include="BatchOfStationaryEntity.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraController.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="Cubemap.h" />
     <ClInclude Include="Display.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="SkyBox.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="ThirdPersonCamera.h" />
     <ClInclude Include="TinyObjLoader.h" />
     <ClInclude Include="UniformBlock.h" />
     <ClInclude Include="UniformBlockDescription.h" />
@@ -201,6 +203,7 @@
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="Shiny.cpp" />
     <ClCompile Include="SkyBox.cpp" />
+    <ClCompile Include="ThirdPersonCamera.cpp" />
     <ClCompile Include="TinyObjLoader.cpp" />
     <ClCompile Include="UniformBlock.cpp" />
     <ClCompile Include="UniformBlockDescription.cpp" />

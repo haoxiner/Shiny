@@ -78,9 +78,6 @@
     <ClInclude Include="ResourceManager.h">
       <Filter>Util</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Scene.h">
       <Filter>Game</Filter>
     </ClInclude>
@@ -129,6 +126,15 @@
     <ClInclude Include="Animation.h">
       <Filter>RenderEngine</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraController.h">
+      <Filter>RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdPersonCamera.h">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -170,9 +176,6 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Util</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="TinyObjLoader.cpp">
       <Filter>OfflineTools</Filter>
     </ClCompile>
@@ -200,8 +203,14 @@
     <ClCompile Include="SkyBox.cpp">
       <Filter>RenderEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>RenderEngine</Filter>
+    </ClCompile>
     <ClCompile Include="Animation.cpp">
       <Filter>RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdPersonCamera.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

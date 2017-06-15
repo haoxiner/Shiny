@@ -2,6 +2,8 @@
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
+#include <glm\gtx\transform.hpp>
+#include <glm\gtc\constants.hpp>
 #include <algorithm>
 
 namespace Shiny
@@ -121,25 +123,40 @@ euler to rotation matrix
 */
 inline Matrix4x4 EulerToRotationMatrix(float yaw, float pitch, float roll)
 {
-    float x = DegreesToRadians(pitch);
-    float y = DegreesToRadians(roll);
-    float z = DegreesToRadians(yaw);
+    //float x = DegreesToRadians(pitch);
+    //float y = DegreesToRadians(roll);
+    //float z = DegreesToRadians(yaw);
 
-    float sz = std::sinf(z);
-    float cz = std::cosf(z);
-    float sy = std::sinf(y);
-    float cy = std::cosf(y);
-    float sx = std::sinf(x);
-    float cx = std::cosf(x);
+    //float sz = std::sinf(z);
+    //float cz = std::cosf(z);
+    //float sy = std::sinf(y);
+    //float cy = std::cosf(y);
+    //float sx = std::sinf(x);
+    //float cx = std::cosf(x);
 
-    return Matrix4x4(
-        cz * cy, sz*cy, -sy, 0,
-        cz*sy*sx - sz*cy, sz*sy*sx + cz*cx, cy*sx, 0,
-        cz*sy*cx + sz*sx, sz*sy*cx - cz*sx, cy*cx, 0,
-        0, 0, 0, 1
-    );
+    //return Matrix4x4(
+    //    cz * cy, sz*cy, -sy, 0,
+    //    cz*sy*sx - sz*cy, sz*sy*sx + cz*cx, cy*sx, 0,
+    //    cz*sy*cx + sz*sx, sz*sy*cx - cz*sx, cy*cx, 0,
+    //    0, 0, 0, 1
+    //);
+    auto viewMatrix = glm::rotate(DegreesToRadians(pitch), glm::vec3(1, 0, 0));
+    viewMatrix = glm::rotate(viewMatrix, DegreesToRadians(roll), glm::vec3(0, 1, 0));
+    viewMatrix = glm::rotate(viewMatrix, DegreesToRadians(yaw), glm::vec3(0, 0, 1));
+    return viewMatrix;
 }
-
+inline Float3 Cross(const Float3& from, const Float3& to)
+{
+    return glm::cross(from, to);
+}
+inline float Dot(const Float3& v1, const Float3& v2)
+{
+    return glm::dot(v1, v2);
+}
+inline Matrix4x4 MakeRotationMatrix(const Float3& axis, float angle)
+{
+    return glm::rotate(angle, axis);
+}
 
 /*
 map float of [-1.0, 1.0] to short

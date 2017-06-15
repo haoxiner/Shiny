@@ -3,9 +3,11 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Entity.h"
+#include "ThirdPersonCamera.h"
 #include "ShaderProgram.h"
 #include "MasterRenderer.h"
 #include "Cubemap.h"
+#include "Camera.h"
 #include "MathUtil.h"
 #include <vector>
 namespace Shiny
@@ -18,6 +20,7 @@ public:
     void Render();
     void Shutdown();
 private:
+    ThirdPersonCamera thirdPersonCamera_;
     std::vector<std::shared_ptr<Mesh>> meshes_;
     std::shared_ptr<Material> bronzeMetal_;
     std::shared_ptr<SkyBox> skyBox_;

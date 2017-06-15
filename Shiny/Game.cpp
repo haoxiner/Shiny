@@ -2,6 +2,7 @@
 #include "ResourceManager.h"
 #include "FreeImage.h"
 #include "TinyObjLoader.h"
+#include "ThirdPersonCamera.h"
 
 #include <fstream>
 #include <iostream>
@@ -31,13 +32,16 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     //e1.models_[bronzeMetal_].emplace_back(meshes_[1]);
     
     skyBox_.reset(new SkyBox("uffizi"));
-   
     return true;
 }
 
 void Shiny::Game::Update(float deltaTime, const Input* input)
 {
+    thirdPersonCamera_.AddForce(input->GetRightHorizontalAxis(), -input->GetRightVerticalAxis());
+    //thirdPersonCamera_.AddForce(input->GetLeftHorizontalAxis(), input->GetLeftVerticalAxis(), 0);
+
     masterRenderer_.Update(deltaTime);
+    masterRenderer_.SetViewMatrix(thirdPersonCamera_.GetViewMatrix(Float3(0.0)));
     Render();
 }
 

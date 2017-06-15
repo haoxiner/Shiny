@@ -128,12 +128,19 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
 }
 void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
 {
+    static float animID = 0.0f;
+    animID += deltaTime_ * 30;
     static auto testFloat = 0.0f;
     testFloat += deltaTime_;
     //testFloat_ = 0;
     auto sinTheta = std::sinf(DegreesToRadians(testFloat * 6.0f));
     auto cosTheta = std::cosf(DegreesToRadians(testFloat * 6.0f));
     Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
+
+    sinTheta = std::sinf(DegreesToRadians(45));
+    cosTheta = std::cosf(DegreesToRadians(45));
+    auto yupCorrection = QuaternionToMatrix({ sinTheta, 0.0f, 0.0f, cosTheta });
+
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
     perFrameBuffer->worldToView = Matrix4x4(1.0f);
@@ -151,7 +158,8 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
         animation->Use();
         auto& entities = animEntityPair.second;
         for (auto&& entity : entities) {
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) *QuaternionToMatrix(Normalize(quat));// ;
+            perObjectBuffer.animationFrameID = int(animID) % 21;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) *QuaternionToMatrix(Normalize(quat))*yupCorrection;// ;
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             for (auto&& pair : entity.models_) {
                 auto material = pair.first;

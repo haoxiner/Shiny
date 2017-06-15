@@ -34,7 +34,7 @@ inline float WrapAngle(float angle)
 /*
     degree to radians
 */
-inline float DegreesToRadians(float degrees)
+inline constexpr float DegreesToRadians(float degrees)
 {
     return glm::radians(degrees);
 }

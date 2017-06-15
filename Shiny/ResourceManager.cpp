@@ -77,9 +77,7 @@ struct Vertex
 };
 struct SkinnedVertex
 {
-    float px;
-    float py;
-    float pz;
+    Float3 p;
     Int_2_10_10_10 n;
     unsigned short tx;
     unsigned short ty;
@@ -100,8 +98,8 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
     std::vector<tinyobj::material_t> materials;
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFileName.c_str());
     
-    int numOfVertices = 23297;
-    std::cerr << "NUM OF VERTICES: " << attrib.vertices.size() / 3 << std::endl;
+    int numOfVertices = attrib.vertices.size() / 3;
+    std::cerr << "NUM OF VERTICES: " << numOfVertices << std::endl;
     std::ifstream skin("../../Resources/Model/prototype.skin", std::ios::binary);
 
     std::vector<int> boneIDList(numOfVertices * 4);
@@ -132,7 +130,7 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
                 float tx = attrib.texcoords[2 * idx.texcoord_index + 0];
                 float ty = attrib.texcoords[2 * idx.texcoord_index + 1];
                 SkinnedVertex vertex = {
-                    vx,vy,vz,
+                    {vx,vy,vz},
                     PackFloat3ToInt2_10_10_10({ nx,ny,nz }),
                     MapToUnsignedShort(tx), MapToUnsignedShort(ty)
                 };
@@ -155,13 +153,20 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
             index_offset += fv;
         }
     }
+    auto fileStart = output.tellp();
+
+    float sinTheta = std::sinf(DegreesToRadians(45));
+    float cosTheta = std::cosf(DegreesToRadians(45));
+    auto yupCorrection = QuaternionToMatrix({ sinTheta, 0.0f, 0.0f, cosTheta });
+
     output.write((char*)outputVertices.data(), sizeof(SkinnedVertex) * outputVertices.size());
     offset += sizeof(SkinnedVertex) * outputVertices.size();
-    std::cerr << "length/offset: " << offset << std::endl;
+    std::cerr << "length/offset: " << offset << ", " << sizeof(SkinnedVertex) << std::endl;
     output.write((char*)indices.data(), sizeof(int)*indices.size());
     int start = offset;
     offset += sizeof(int) * indices.size();
     std::cerr << "length: " << (offset - start) << std::endl;
     std::cerr << indices.size() << std::endl;
+    std::cerr << "Compact num of vertices: " << outputVertices.size() << std::endl;
     output.close();
 }

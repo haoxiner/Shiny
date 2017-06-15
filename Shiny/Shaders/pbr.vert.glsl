@@ -39,7 +39,7 @@ void main()
 
 	vec4 P = vec4(vertexPosition, 1.0);
 	vec4 N = vec4(normalize(vertexNormal.xyz), 0.0);
-	uint frameID = 0;
+	uint frameID = animationFrameID * 3 * 60;
 	for (int i = 0; i < 4; i++) {
 		vec4 frames[3];
 		for (int j = 0; j < 3; j++) {

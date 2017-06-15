@@ -155,9 +155,7 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
     }
     auto fileStart = output.tellp();
 
-    float sinTheta = std::sinf(DegreesToRadians(45));
-    float cosTheta = std::cosf(DegreesToRadians(45));
-    auto yupCorrection = QuaternionToMatrix({ sinTheta, 0.0f, 0.0f, cosTheta });
+
 
     output.write((char*)outputVertices.data(), sizeof(SkinnedVertex) * outputVertices.size());
     offset += sizeof(SkinnedVertex) * outputVertices.size();

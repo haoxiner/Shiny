@@ -3,7 +3,8 @@ layout(location = 0) in vec4 vertexAttribute0;
 out vec3 cubemapDirection;
 layout(binding = 0, std140) uniform StaticConstantBuffer
 {
-	mat4 viewToProjection;
+	mat4 viewToProjectionForYup;
+	mat4 viewToProjectionForZup;
 };
 layout(binding = 1, std140) uniform PerFrameConstantBuffer
 {
@@ -34,5 +35,5 @@ void main()
 	// rotate and project SkyBox to camera
 	vec4 position = worldToView * vec4(vertexAttribute0.xyz, 0.0);
 	position.w = 1.0;
-	gl_Position = (viewToProjection * position).xyww;
+	gl_Position = (viewToProjectionForZup * position).xyww;
 }

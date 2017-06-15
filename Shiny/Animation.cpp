@@ -7,7 +7,7 @@
 Shiny::Animation::Animation(const std::string& name)
 {
     glCreateBuffers(1, &animationFrameBufferID_);
-    std::ifstream inputFileStream("../../Resources/Model/prototype.anim", std::ios::binary);
+    std::ifstream inputFileStream("../../Resources/Model/run.anim", std::ios::binary);
 
     std::streampos fsize = 0;
     auto fstart = inputFileStream.tellg();

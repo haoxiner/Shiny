@@ -13,6 +13,7 @@ public:
     int GetWidth() const { return width_; }
     int GetHeight() const { return height_; }
     static const std::string FACE_NAME[6];
+    static const std::string DIRECTION_NAME[6];
 private:
     GLuint textureID_ = 0;
     GLuint samplerID_ = 0;

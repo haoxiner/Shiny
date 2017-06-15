@@ -8,7 +8,7 @@ struct PerObjectConstantBuffer
 {
     Matrix4x4 modelToWorld;
     Float4 material0;
-    int animationFrameID;
+    Float4 animationState;
 };
 struct PerFrameConstantBuffer
 {
@@ -17,7 +17,8 @@ struct PerFrameConstantBuffer
 };
 struct StaticConstantBuffer
 {
-    Matrix4x4 viewToProjection;
+    Matrix4x4 viewToProjectionForYup;
+    Matrix4x4 viewToProjectionForZup;
 };
 enum ConstantBufferType
 {
@@ -101,7 +102,7 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
     //testFloat_ = 0;
     auto sinTheta = std::sinf(DegreesToRadians(testFloat * 6.0f));
     auto cosTheta = std::cosf(DegreesToRadians(testFloat * 6.0f));
-    Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
+    Quaternion quat(0.0f, 0.0f, sinTheta, cosTheta);
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
     perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
     perFrameBuffer->worldToView = Matrix4x4(1.0f);
@@ -118,7 +119,6 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
         glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
         for (auto&& pair : entity.models_) {
             auto material = pair.first;
-            
             material->Use();
             for (auto&& mesh : pair.second) {
                 mesh->Render();
@@ -130,20 +130,11 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
 {
     static float animID = 0.0f;
     animID += deltaTime_ * 30;
-    static auto testFloat = 0.0f;
-    testFloat += deltaTime_;
-    //testFloat_ = 0;
-    auto sinTheta = std::sinf(DegreesToRadians(testFloat * 6.0f));
-    auto cosTheta = std::cosf(DegreesToRadians(testFloat * 6.0f));
-    Quaternion quat(0.0f, sinTheta, 0.0f, cosTheta);
-
-    sinTheta = std::sinf(DegreesToRadians(45));
-    cosTheta = std::cosf(DegreesToRadians(45));
-    auto yupCorrection = QuaternionToMatrix({ sinTheta, 0.0f, 0.0f, cosTheta });
+    static float testFloat = 0.0f;
+    testFloat += 45 * deltaTime_;
 
     auto perFrameBuffer = static_cast<PerFrameConstantBuffer*>(glMapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], GL_WRITE_ONLY));
-    perFrameBuffer->data = Float4(sinTheta * 0.5 + 0.5, cosTheta * 0.5 + 0.5, (sinTheta * 0.5 + cosTheta * 0.5) *0.5 + 0.5, 1.0);
-    perFrameBuffer->worldToView = Matrix4x4(1.0f);
+    perFrameBuffer->worldToView = EulerToRotationMatrix(testFloat, 0, 0);
     glUnmapNamedBuffer(constantBufferList_[PER_FRAME_CONSTANT_BUFFER]);
 
     stationaryEntityShader_.Use();
@@ -158,8 +149,8 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
         animation->Use();
         auto& entities = animEntityPair.second;
         for (auto&& entity : entities) {
-            perObjectBuffer.animationFrameID = int(animID) % 21;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) *QuaternionToMatrix(Normalize(quat))*yupCorrection;// ;
+            perObjectBuffer.animationState.x = (int(animID) % 21) * 3 * 60;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_);// ;
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
             for (auto&& pair : entity.models_) {
                 auto material = pair.first;
@@ -177,7 +168,16 @@ void MasterRenderer::SetupConstantBuffers()
     constantBufferList_.resize(NUM_OF_CONSTANT_BUFFER);
     glCreateBuffers(constantBufferList_.size(), constantBufferList_.data());
     StaticConstantBuffer staticConstantBuffer;
-    staticConstantBuffer.viewToProjection = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 0.001f, 1000.0f);
+    float sinTheta = std::sinf(DegreesToRadians(45));
+    float cosTheta = std::cosf(DegreesToRadians(45));
+    auto Rotate90degreeAboutXAxis = Matrix4x4(
+        1, 0, 0, 0,
+        0, 0, -1, 0,
+        0, 1, 0, 0,
+        0, 0, 0, 1
+    );
+    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 0.001f, 1000.0f);
+    staticConstantBuffer.viewToProjectionForZup = staticConstantBuffer.viewToProjectionForYup * Rotate90degreeAboutXAxis;
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);
     glNamedBufferStorage(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], sizeof(PerObjectConstantBuffer), nullptr, GL_DYNAMIC_STORAGE_BIT);

@@ -20,7 +20,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 
     batchOfAnimatedEntity_.batch_[animation_].emplace_back();
     auto& e0 = batchOfAnimatedEntity_.batch_[animation_].back();
-    e0.position_ = Float3(0, -10, -20);
+    e0.position_ = Float3(0, 20, -10);
     e0.scale_ = Float3(0.1);
     e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
 

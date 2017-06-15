@@ -16,7 +16,7 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 {
 	mat4 modelToWorld;
 	vec4 material0;
-	int animationFrameID;
+	vec4 animationState;
 };
 
 layout(binding = 0) uniform sampler2D dfgMap;
@@ -44,6 +44,18 @@ vec4 SamplePanorama(sampler2D panorama, vec3 direction, float mipmapLevel)
 	return textureLod(panorama, uv, mipmapLevel);
 }
 
+vec4 SampleCubemapForZup(samplerCube cubemap, vec3 direction, float lod)
+{
+	vec4 color = textureLod(cubemap, vec3(direction.x, direction.z, -direction.y), lod);
+	return color;
+}
+
+vec4 SampleCubemapForZup(samplerCube cubemap, vec3 direction)
+{
+	vec4 color = texture(cubemap, vec3(direction.x, direction.z, -direction.y));
+	return color;
+}
+
 vec3 GetDiffuseDominantDir(vec3 N, vec3 V, float NdotV , float roughness)
 {
 	float a = 1.02341 * roughness - 1.51174;
@@ -57,7 +69,7 @@ vec3 EvaluateIBLDiffuse(vec3 N, vec3 V, float NdotV , float alphaG)
 {
 	// vec3 dominantN = GetDiffuseDominantDir(N, V, NdotV , roughness);
 	vec3 dominantN = N;
-	vec3 diffuseLighting = texture(diffuseEnvmap, dominantN).xyz;
+	vec3 diffuseLighting = SampleCubemapForZup(diffuseEnvmap, dominantN).xyz;
 	float diffF = texture(dfgMap, vec2(NdotV , alphaG)).z;
 	return diffuseLighting * diffF;
 }
@@ -107,7 +119,7 @@ vec3 EvaluateIBLSpecular(vec3 N, vec3 V, float NdotV , float alphaG, float rough
 	float mipCount = 6;
 	
 	float mipLevel = LinearRoughnessToMipLevel(roughness , mipCount);
-	vec3 preLD = textureLod(specularEnvmap , dominantR , mipLevel).rgb;
+	vec3 preLD = SampleCubemapForZup(specularEnvmap , dominantR , mipLevel).rgb;
 	// vec3 preLD = SamplePanorama(specularEnvmap, dominantR).xyz;
 
 	// Sample pre-integrate DFG
@@ -229,7 +241,7 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	// roughness = 0.9;
+	// roughness = 0.0;
 	// metallic = 1.0;
 	// alphaG = roughness * roughness;
 	// baseColor = vec3(1.0, 1.0, 1.0);

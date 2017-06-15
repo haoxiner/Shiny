@@ -19,7 +19,8 @@ layout(binding = 0, std140) buffer AnimationBuffer
 };
 layout(binding = 0, std140) uniform StaticConstantBuffer
 {
-	mat4 viewToProjection;
+	mat4 viewToProjectionForYup;
+	mat4 viewToProjectionForZup;
 };
 layout(binding = 1, std140) uniform PerFrameConstantBuffer
 {
@@ -30,7 +31,7 @@ layout(binding = 2, std140) uniform PerObjectConstantBuffer
 {
 	mat4 modelToWorld;
 	vec4 material0;
-	int animationFrameID;
+	vec4 animationState;
 };
 void main()
 {
@@ -39,19 +40,19 @@ void main()
 
 	vec4 P = vec4(vertexPosition, 1.0);
 	vec4 N = vec4(normalize(vertexNormal.xyz), 0.0);
-	uint frameID = animationFrameID * 3 * 60;
+	uint frameOffset = uint(animationState.x);
 	for (int i = 0; i < 4; i++) {
-		vec4 frames[3];
+		vec4 boneTransform[3];
 		for (int j = 0; j < 3; j++) {
-			frames[j] = animationFrame[frameID + boneID[i]*3 + j];
+			boneTransform[j] = animationFrame[frameOffset + boneID[i]*3 + j];
 		}
-		position += boneWeight[i] * vec3(dot(P, frames[0]), dot(P, frames[1]), dot(P, frames[2]));
-		normal += boneWeight[i] * vec3(dot(N, frames[0]), dot(N, frames[1]), dot(N, frames[2]));
+		position += boneWeight[i] * vec3(dot(P, boneTransform[0]), dot(P, boneTransform[1]), dot(P, boneTransform[2]));
+		normal += boneWeight[i] * vec3(dot(N, boneTransform[0]), dot(N, boneTransform[1]), dot(N, boneTransform[2]));
 	}
 
 	position = (modelToWorld * vec4(position, 1.0)).xyz;
 	normal = normalize(modelToWorld * vec4(normal, 0.0)).xyz;
 	texCoord = vertexTexCoord;
 
-	gl_Position = viewToProjection * worldToView * vec4(position, 1.0);
+	gl_Position = viewToProjectionForZup * worldToView * vec4(position, 1.0);
 }

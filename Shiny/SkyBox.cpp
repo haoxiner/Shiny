@@ -9,15 +9,15 @@ Shiny::SkyBox::SkyBox(const std::string& name)
     if (!mesh_.get()) {
         std::vector<short> positions = {
             // bottom
-            MapToShort(-1.0f), MapToShort(-1.0f), MapToShort(-1.0f), MapToShort(0.0f), // top left 0
-            MapToShort(1.0f), MapToShort(-1.0f), MapToShort(-1.0f), MapToShort(0.0f), // top right 1
-            MapToShort(-1.0f), MapToShort(-1.0f), MapToShort(1.0f), MapToShort(0.0f), // bottom left 2
-            MapToShort(1.0f), MapToShort(-1.0f), MapToShort(1.0f), MapToShort(0.0f), // bottom right 3
+            MapToShort(-1.0f), MapToShort(1.0f), MapToShort(-1.0f), MapToShort(0.0f), // top left 0
+            MapToShort(1.0f),  MapToShort(1.0f), MapToShort(-1.0f), MapToShort(0.0f), // top right 1
+            MapToShort(-1.0f), MapToShort(-1.0f),  MapToShort(-1.0f), MapToShort(0.0f), // bottom left 2
+            MapToShort(1.0f),  MapToShort(-1.0f),  MapToShort(-1.0f), MapToShort(0.0f), // bottom right 3
             // top
-            MapToShort(-1.0f), MapToShort(1.0f), MapToShort(-1.0f), MapToShort(0.0f), // top left 4
-            MapToShort(1.0f), MapToShort(1.0f), MapToShort(-1.0f), MapToShort(0.0f), // top right 5
-            MapToShort(-1.0f), MapToShort(1.0f), MapToShort(1.0f), MapToShort(0.0f), // bottom left 6
-            MapToShort(1.0f), MapToShort(1.0f), MapToShort(1.0f), MapToShort(0.0f) // bottom right 7
+            MapToShort(-1.0f), MapToShort(1.0f), MapToShort(1.0f), MapToShort(0.0f), // top left 4
+            MapToShort(1.0f),  MapToShort(1.0f), MapToShort(1.0f), MapToShort(0.0f), // top right 5
+            MapToShort(-1.0f), MapToShort(-1.0f),  MapToShort(1.0f), MapToShort(0.0f), // bottom left 6
+            MapToShort(1.0f),  MapToShort(-1.0f),  MapToShort(1.0f), MapToShort(0.0f) // bottom right 7
         };
         std::vector<unsigned short> indices = {
             0,2,1, 1,2,3, // bottom

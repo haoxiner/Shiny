@@ -39,7 +39,6 @@ inline constexpr float DegreesToRadians(float degrees)
     return glm::radians(degrees);
 }
 
-
 using Float2 = glm::vec2;
 using Float3 = glm::vec3;
 using Float4 = glm::vec4;
@@ -115,6 +114,30 @@ Scale By Vector3f
 inline Matrix4x4 MakeScaleMatrix(const Float3& vector3f)
 {
     return MakeScaleMatrix(vector3f.x, vector3f.y, vector3f.z);
+}
+
+/*
+euler to rotation matrix
+*/
+inline Matrix4x4 EulerToRotationMatrix(float yaw, float pitch, float roll)
+{
+    float x = DegreesToRadians(pitch);
+    float y = DegreesToRadians(roll);
+    float z = DegreesToRadians(yaw);
+
+    float sz = std::sinf(z);
+    float cz = std::cosf(z);
+    float sy = std::sinf(y);
+    float cy = std::cosf(y);
+    float sx = std::sinf(x);
+    float cx = std::cosf(x);
+
+    return Matrix4x4(
+        cz * cy, sz*cy, -sy, 0,
+        cz*sy*sx - sz*cy, sz*sy*sx + cz*cx, cy*sx, 0,
+        cz*sy*cx + sz*sx, sz*sy*cx - cz*sx, cy*cx, 0,
+        0, 0, 0, 1
+    );
 }
 
 

@@ -6,6 +6,7 @@
 #include <iostream>
 
 const std::string Shiny::Cubemap::FACE_NAME[6] = { "PX", "NX", "PY", "NY", "PZ", "NZ" };
+const std::string Shiny::Cubemap::DIRECTION_NAME[6] = { "right", "left", "front", "back", "up", "down" };
 
 Shiny::Cubemap::Cubemap(const std::string& directory, const std::string& fileID, bool enableHDR)
 {

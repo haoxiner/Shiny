@@ -102,7 +102,6 @@ struct VertexDescription
 };
 void Shiny::Mesh::LoadStandardPackage(const std::string& name)
 {
-    
     const std::string directory = "../../Resources/Model/";
     const std::string prefix = directory + name;
     Json::JsonObject json;
@@ -136,6 +135,7 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
         { 2, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 2 } // texcoord: unsigned short2
     };
     if (hasSkeleton) {
+        std::cerr << "HAS SKELETON" << std::endl;
         vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);
         vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, true, sizeof(unsigned short) * 4);
         //vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);

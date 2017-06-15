@@ -58,7 +58,8 @@ bool MasterRenderer::Startup(int xResolution, int yResolution)
     SetupPreIntegratedData();
     SetupEnvironment("uffizi");
 
-    stationaryEntityShader_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
+    stationaryEntityShader_.Startup(ResourceManager::ReadFileToString("./Shaders/Stationary.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
+    animatingEntityShader_.Startup(ResourceManager::ReadFileToString("./Shaders/PBR.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/PBR.frag.glsl"));
     skyBoxShader_.Startup(ResourceManager::ReadFileToString("./Shaders/SkyBox.vert.glsl"), ResourceManager::ReadFileToString("./Shaders/SkyBox.frag.glsl"));
     return true;
 }
@@ -98,18 +99,17 @@ void MasterRenderer::Update(float deltaTime)
 }
 void MasterRenderer::Render(BatchOfStationaryEntity& batch)
 {   
-    static auto testFloat = 0.0f;
-    testFloat += deltaTime_;
-
     stationaryEntityShader_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     glBindTextureUnit(0, dfgTextureID_);
     glBindSampler(0, defaultSamplerID_);
     diffuseCubemap_->BindTextureUint(1);
     specularCubemap_->BindTextureUint(2);
+    perObjectBuffer.modelToWorld = MakeScaleMatrix(2,2,2);
+    glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
     for (auto&& entity : batch.entityList_) {
-        perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_);// ;
-        glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
+        //perObjectBuffer.modelToWorld = MakeScaleMatrix(entity.scale_);// ;
+        //glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
         for (auto&& pair : entity.models_) {
             auto material = pair.first;
             material->Use();
@@ -124,7 +124,7 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
     static float animID = 0.0f;
     animID += deltaTime_ * 30;
 
-    stationaryEntityShader_.Use();
+    animatingEntityShader_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     glBindTextureUnit(0, dfgTextureID_);
     glBindSampler(0, defaultSamplerID_);
@@ -163,7 +163,7 @@ void MasterRenderer::SetupConstantBuffers()
         0, 1, 0, 0,
         0, 0, 0, 1
     );
-    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 10.0f, 1000.0f);
+    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 10.0f, 10000.0f);
     staticConstantBuffer.viewToProjectionForZup = staticConstantBuffer.viewToProjectionForYup/* * Rotate90degreeAboutXAxis*/;
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);

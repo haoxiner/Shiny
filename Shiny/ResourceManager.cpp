@@ -68,12 +68,14 @@ namespace Shiny
 {
 struct Vertex
 {
-    float px;
-    float py;
-    float pz;
+    Float3 p;
     Int_2_10_10_10 n;
     unsigned short tx;
     unsigned short ty;
+    bool operator<(const Vertex& rhs) const
+    {
+        return std::memcmp((void*)this, (void*)&rhs, sizeof(Vertex)) < 0;
+    };
 };
 struct SkinnedVertex
 {
@@ -160,6 +162,72 @@ void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const
     output.write((char*)outputVertices.data(), sizeof(SkinnedVertex) * outputVertices.size());
     offset += sizeof(SkinnedVertex) * outputVertices.size();
     std::cerr << "length/offset: " << offset << ", " << sizeof(SkinnedVertex) << std::endl;
+    output.write((char*)indices.data(), sizeof(int)*indices.size());
+    int start = offset;
+    offset += sizeof(int) * indices.size();
+    std::cerr << "length: " << (offset - start) << std::endl;
+    std::cerr << indices.size() << std::endl;
+    std::cerr << "Compact num of vertices: " << outputVertices.size() << std::endl;
+    output.close();
+}
+
+void Shiny::ResourceManager::WriteObjToScene(const std::string& objFileName, const std::string& sceneFileName)
+{
+    tinyobj::attrib_t attrib;
+    std::string err;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, objFileName.c_str());
+    if (!ret) {
+        std::cerr << "ERROR When Reading OBJ: " << err << std::endl;
+        return;
+    }
+    int numOfVertices = attrib.vertices.size() / 3;
+    std::cerr << "NUM OF VERTICES: " << numOfVertices << std::endl;
+
+    // combine equal vertices
+    std::map<Vertex, int> vertexMap;
+    std::vector<Vertex> outputVertices;
+
+    std::vector<int> indices;
+    std::ofstream output(sceneFileName, std::ios::binary);
+    int offset = 0;
+    for (size_t s = 0; s < 1; s++) {
+        size_t index_offset = 0;
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+            int fv = shapes[s].mesh.num_face_vertices[f];
+            for (size_t v = 0; v < fv; v++) {
+                auto idx = shapes[s].mesh.indices[index_offset + v];
+                float vx = attrib.vertices[3 * idx.vertex_index + 0];
+                float vy = attrib.vertices[3 * idx.vertex_index + 1];
+                float vz = attrib.vertices[3 * idx.vertex_index + 2];
+                float nx = attrib.normals[3 * idx.normal_index + 0];
+                float ny = attrib.normals[3 * idx.normal_index + 1];
+                float nz = attrib.normals[3 * idx.normal_index + 2];
+                float tx = attrib.texcoords[2 * idx.texcoord_index + 0];
+                float ty = attrib.texcoords[2 * idx.texcoord_index + 1];
+                Vertex vertex = {
+                    { vx,vy,vz },
+                    PackFloat3ToInt2_10_10_10({ nx,ny,nz }),
+                    MapToUnsignedShort(tx), MapToUnsignedShort(ty)
+                };
+                auto vMapIter = vertexMap.find(vertex);
+                if (vMapIter == vertexMap.end()) {
+                    int index = static_cast<int>(outputVertices.size());
+                    indices.emplace_back(index);
+                    vertexMap[vertex] = index;
+                    outputVertices.emplace_back(vertex);
+                } else {
+                    indices.emplace_back(vMapIter->second);
+                }
+            }
+            index_offset += fv;
+        }
+    }
+    auto fileStart = output.tellp();
+    output.write((char*)outputVertices.data(), sizeof(Vertex) * outputVertices.size());
+    offset += sizeof(Vertex) * outputVertices.size();
+    std::cerr << "length/offset: " << offset << ", " << std::endl;
     output.write((char*)indices.data(), sizeof(int)*indices.size());
     int start = offset;
     offset += sizeof(int) * indices.size();

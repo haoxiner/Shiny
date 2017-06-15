@@ -238,5 +238,8 @@
     <None Include="Shaders\PreIntegrator.cs.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\Stationary.vert.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

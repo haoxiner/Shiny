@@ -242,10 +242,10 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	// roughness = 0.2;
-	// metallic = 0.0;
-	// alphaG = roughness * roughness;
-	// baseColor = vec3(1.0, 1.0, 1.0);
+	roughness = 0.5;
+	metallic = 1;
+	alphaG = roughness * roughness;
+	baseColor = vec3(1.0, 1.0, 1.0);
 
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);

@@ -26,6 +26,7 @@ private:
     float deltaTime_ = 0.0f;
 private:
     ShaderProgram stationaryEntityShader_;
+    ShaderProgram animatingEntityShader_;
     ShaderProgram skyBoxShader_;
     GLuint dfgTextureID_;
     GLuint defaultSamplerID_;

@@ -21,7 +21,7 @@ void Shiny::ThirdPersonCamera::GetPose(Matrix4x4& viewMatrix, Float3& cameraPosi
         0, 0, 0, 1
     );
 
-    cameraPosition = focusPosition + Float3(x, y, z)*300.0f;
+    cameraPosition = focusPosition + Float3(x, y, z)*45.0f;
     const auto f(Normalize(focusPosition - cameraPosition));
     const auto s(Normalize(Cross(f, Float3(0, 0, 1))));
     const auto u(cross(s, f));

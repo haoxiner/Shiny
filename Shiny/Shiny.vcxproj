@@ -218,6 +218,7 @@
     <None Include="Shaders\PreIntegrator.cs.glsl" />
     <None Include="Shaders\SkyBox.frag.glsl" />
     <None Include="Shaders\SkyBox.vert.glsl" />
+    <None Include="Shaders\Stationary.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

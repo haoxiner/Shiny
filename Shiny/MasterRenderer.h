@@ -4,6 +4,7 @@
 #include "Cubemap.h"
 #include "ShaderProgram.h"
 #include "SkyBox.h"
+#include "Terrain.h"
 #include "Camera.h"
 #include "MathUtil.h"
 #include "Platform.h"
@@ -22,6 +23,7 @@ public:
     void Update(float deltaTime);
     void Render(BatchOfStationaryEntity& batch);
     void Render(BatchOfAnimatedEntity& batch);
+    void Render(const Terrain& terrain);
 private:
     float deltaTime_ = 0.0f;
 private:

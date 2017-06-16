@@ -43,6 +43,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     //e1.models_[bronzeMetal_].emplace_back(meshes_[1]);
     
     skyBox_.reset(new SkyBox("uffizi"));
+    terrain_.reset(new Terrain(""));
     return true;
 }
 
@@ -63,7 +64,8 @@ void Shiny::Game::Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     masterRenderer_.Render(batchOfAnimatedEntity_);
-    masterRenderer_.Render(batchOfStationaryEntity_);
+    //masterRenderer_.Render(batchOfStationaryEntity_);
+    masterRenderer_.Render(*terrain_);
     masterRenderer_.RenderSky(*skyBox_);
 }
 

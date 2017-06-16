@@ -85,21 +85,6 @@ void Shiny::Mesh::LoadIndices(const std::vector<unsigned int>& indices)
     LoadIndices(indices.data(), indices.size() * sizeof(indices[0]));
 }
 
-
-struct VertexDescription
-{
-    int numOfChannel_;
-    GLenum type_;
-    bool normalized_;
-    int size_;
-    VertexDescription(int numOfChannel,
-                      GLenum type,
-                      bool normalized,
-                      int size) : 
-        numOfChannel_(numOfChannel), type_(type), normalized_(normalized), size_(size)
-    {
-    }
-};
 void Shiny::Mesh::LoadStandardPackage(const std::string& name)
 {
     const std::string directory = "../../Resources/Model/";
@@ -141,15 +126,22 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
         //vertexDescList.emplace_back(4, GL_UNSIGNED_SHORT, false, sizeof(unsigned short) * 4);
         //vertexDescList.emplace_back(4, GL_FLOAT, false, sizeof(float) * 4);
     }
+    LoadVertices(vertexData.data(), vertexData.size(), vertexDescList);
+    std::cerr << vboList_ .size() << std::endl;
+    LoadIndices(indexData.data(), indexData.size());
+}
+
+void Shiny::Mesh::LoadVertices(const void* data, int size, const std::vector<VertexDescription>& descList)
+{
     int stride = 0;// 40;
-    for (const auto& desc : vertexDescList) {
+    for (const auto& desc : descList) {
         stride += desc.size_;
     }
     std::cerr << "stride" << stride << std::endl;
-    glNamedBufferStorage(vboList_[0], vertexData.size(), vertexData.data(), 0);
+    glNamedBufferStorage(vboList_[0], size, data, 0);
     glVertexArrayVertexBuffer(vao_, 0, vboList_[0], 0, stride);
-    for (int index = 0, relativeOffset = 0; index < vertexDescList.size(); index++) {
-        const auto& desc = vertexDescList[index];
+    for (int index = 0, relativeOffset = 0; index < descList.size(); index++) {
+        const auto& desc = descList[index];
         glEnableVertexArrayAttrib(vao_, index);
         if (desc.type_ == GL_UNSIGNED_SHORT && !desc.normalized_) {
             std::cerr << index << ": BONE ID SUBMITING" << ": " << desc.numOfChannel_ << std::endl;
@@ -161,10 +153,6 @@ void Shiny::Mesh::LoadStandardPackage(const std::string& name)
         glVertexArrayAttribBinding(vao_, index, 0);
         std::cerr << "relative: " << relativeOffset << std::endl;
     }
-    int* d = (int*)indexData.data();
-    std::cerr << vboList_ .size() << std::endl;
-    glNamedBufferStorage(vboList_[1], indexData.size(), indexData.data(), 0);
-    glVertexArrayElementBuffer(vao_, vboList_[1]);
 }
 
 void Shiny::Mesh::Render()

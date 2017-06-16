@@ -157,6 +157,20 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
     glDisable(GL_FRAMEBUFFER_SRGB);
 
 }
+void MasterRenderer::Render(const Terrain& terrain)
+{
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    stationaryEntityShader_.Use();
+    PerObjectConstantBuffer perObjectBuffer;
+    glBindTextureUnit(0, dfgTextureID_);
+    glBindSampler(0, defaultSamplerID_);
+    diffuseCubemap_->BindTextureUint(1);
+    specularCubemap_->BindTextureUint(2);
+    perObjectBuffer.modelToWorld = Matrix4x4(1.0);
+    glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
+    terrain.Render();
+    glDisable(GL_FRAMEBUFFER_SRGB);
+}
 void MasterRenderer::SetupConstantBuffers()
 {
     // GPU Resource

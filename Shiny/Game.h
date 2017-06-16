@@ -7,6 +7,7 @@
 #include "ShaderProgram.h"
 #include "MasterRenderer.h"
 #include "Cubemap.h"
+#include "Terrain.h"
 #include "Camera.h"
 #include "MathUtil.h"
 #include <vector>
@@ -23,7 +24,8 @@ private:
     ThirdPersonCamera thirdPersonCamera_;
     std::vector<std::shared_ptr<Mesh>> meshes_;
     std::shared_ptr<Material> bronzeMetal_;
-    std::shared_ptr<SkyBox> skyBox_;
+    std::unique_ptr<SkyBox> skyBox_;
+    std::unique_ptr<Terrain> terrain_;
     MasterRenderer masterRenderer_;
     BatchOfStationaryEntity batchOfStationaryEntity_;
     BatchOfAnimatedEntity batchOfAnimatedEntity_;

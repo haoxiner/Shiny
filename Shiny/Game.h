@@ -28,7 +28,9 @@ private:
     std::unique_ptr<Terrain> terrain_;
     MasterRenderer masterRenderer_;
     BatchOfStationaryEntity batchOfStationaryEntity_;
-    BatchOfAnimatedEntity batchOfAnimatedEntity_;
+    BatchOfAnimatingEntity batchOfAnimatingEntity_;
     std::shared_ptr<Animation> animation_;
+
+    std::shared_ptr<Entity> playerEntity_;
 };
 }

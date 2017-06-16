@@ -113,7 +113,7 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
     for (auto&& entity : batch.entityList_) {
         //perObjectBuffer.modelToWorld = MakeScaleMatrix(entity.scale_);// ;
         //glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
-        for (auto&& pair : entity.models_) {
+        for (auto&& pair : entity->models_) {
             auto material = pair.first;
             material->Use();
             for (auto&& mesh : pair.second) {
@@ -123,7 +123,7 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
     }
     glDisable(GL_FRAMEBUFFER_SRGB);
 }
-void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
+void MasterRenderer::Render(BatchOfAnimatingEntity& batch)
 {
     glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -143,9 +143,9 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
         auto& entities = animEntityPair.second;
         for (auto&& entity : entities) {
             perObjectBuffer.animationState.x = (int(animID) % 21) * 3 * 60;
-            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity.position_) * MakeScaleMatrix(entity.scale_) * QuaternionToMatrix(Normalize(entity.rotation_));// ;
+            perObjectBuffer.modelToWorld = MakeTranslationMatrix(entity->position_) * MakeScaleMatrix(entity->scale_) * QuaternionToMatrix(Normalize(entity->rotation_));// ;
             glNamedBufferSubData(constantBufferList_[PER_OBJECT_CONSTANT_BUFFER], 0, sizeof(PerObjectConstantBuffer), &perObjectBuffer);
-            for (auto&& pair : entity.models_) {
+            for (auto&& pair : entity->models_) {
                 auto material = pair.first;
                 material->Use();
                 for (auto&& mesh : pair.second) {

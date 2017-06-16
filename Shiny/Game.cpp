@@ -22,19 +22,20 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     
     animation_.reset(new Animation("prototype"));
 
-    batchOfAnimatedEntity_.batch_[animation_].emplace_back();
-    auto& e0 = batchOfAnimatedEntity_.batch_[animation_].back();
-    e0.position_ = Float3(0, 0, 0);
-    e0.scale_ = Float3(0.01);
-    e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
-    e0.rotation_ = Float4(0,0,1,0);
+    playerEntity_.reset(new Entity);
+    batchOfAnimatingEntity_.batch_[animation_].emplace_back(playerEntity_);
+    //auto& e0 = batchOfAnimatingEntity_.batch_[animation_].back();
+    playerEntity_->position_ = Float3(63.5, 63.5, 0);
+    playerEntity_->scale_ = Float3(0.01);
+    playerEntity_->models_[bronzeMetal_].emplace_back(meshes_[0]);
+    playerEntity_->rotation_ = Float4(0,0,1,0);
 
-    batchOfStationaryEntity_.entityList_.emplace_back();
+    batchOfStationaryEntity_.entityList_.emplace_back(new Entity);
     auto& e1 = batchOfStationaryEntity_.entityList_.back();
-    e1.position_ = Float3(0);
-    e1.scale_ = Float3(100);
-    e1.rotation_ = Float4(0, 0, 1, 1);
-    e1.models_[bronzeMetal_].emplace_back(meshes_[1]);
+    e1->position_ = Float3(0);
+    e1->scale_ = Float3(100);
+    e1->rotation_ = Float4(0, 0, 1, 1);
+    e1->models_[bronzeMetal_].emplace_back(meshes_[1]);
 
     //batchOfStationaryEntity_.entityList_.emplace_back();
     //auto& e1 = batchOfStationaryEntity_.entityList_.back();
@@ -50,12 +51,10 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
 void Shiny::Game::Update(float deltaTime, const Input* input)
 {
     thirdPersonCamera_.AddForce(-input->GetRightHorizontalAxis(), input->GetRightVerticalAxis());
-    //thirdPersonCamera_.AddForce(input->GetLeftHorizontalAxis(), input->GetLeftVerticalAxis(), 0);
-
     masterRenderer_.Update(deltaTime);
     Matrix4x4 view;
     Float3 position;
-    thirdPersonCamera_.GetPose(view, position, Float3(0,0,1.5));
+    thirdPersonCamera_.GetPose(view, position, playerEntity_->position_ + Float3(0,0,1.5));
     masterRenderer_.SetCameraPose(view, position);
     Render();
 }
@@ -63,7 +62,7 @@ void Shiny::Game::Update(float deltaTime, const Input* input)
 void Shiny::Game::Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    masterRenderer_.Render(batchOfAnimatedEntity_);
+    masterRenderer_.Render(batchOfAnimatingEntity_);
     //masterRenderer_.Render(batchOfStationaryEntity_);
     masterRenderer_.Render(*terrain_);
     masterRenderer_.RenderSky(*skyBox_);

@@ -7,9 +7,9 @@
 #include "Animation.h"
 namespace Shiny
 {
-class BatchOfAnimatedEntity
+class BatchOfAnimatingEntity
 {
 public:
-    std::map<std::shared_ptr<Animation>, std::vector<Entity>> batch_;
+    std::map<std::shared_ptr<Animation>, std::vector<std::shared_ptr<Entity>>> batch_;
 };
 }

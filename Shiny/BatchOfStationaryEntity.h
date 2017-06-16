@@ -9,6 +9,6 @@ namespace Shiny
 class BatchOfStationaryEntity
 {
 public:
-    std::vector<Entity> entityList_;
+    std::vector<std::shared_ptr<Entity>> entityList_;
 };
 }

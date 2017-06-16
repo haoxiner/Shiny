@@ -1,6 +1,6 @@
 #pragma once
 #include "BatchOfStationaryEntity.h"
-#include "BatchOfAnimatedEntity.h"
+#include "BatchOfAnimatingEntity.h"
 #include "Cubemap.h"
 #include "ShaderProgram.h"
 #include "SkyBox.h"
@@ -22,7 +22,7 @@ public:
     void RenderSky(SkyBox& skyBox);
     void Update(float deltaTime);
     void Render(BatchOfStationaryEntity& batch);
-    void Render(BatchOfAnimatedEntity& batch);
+    void Render(BatchOfAnimatingEntity& batch);
     void Render(const Terrain& terrain);
 private:
     float deltaTime_ = 0.0f;

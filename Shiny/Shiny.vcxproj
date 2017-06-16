@@ -143,7 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
-    <ClInclude Include="BatchOfAnimatedEntity.h" />
+    <ClInclude Include="BatchOfAnimatingEntity.h" />
     <ClInclude Include="BatchOfStaticEntity.h" />
     <ClInclude Include="BatchOfStationaryEntity.h" />
     <ClInclude Include="Camera.h" />

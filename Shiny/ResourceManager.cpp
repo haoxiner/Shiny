@@ -1,6 +1,8 @@
 #include "ResourceManager.h"
 #include "TinyObjLoader.h"
 #include "MathUtil.h"
+#include "Vertex.h"
+#include "SkinnedVertex.h"
 #include <vector>
 #include <iostream>
 #include <memory>
@@ -62,34 +64,6 @@ bool Shiny::ResourceManager::LoadObjToMesh(const std::string& fileName, Mesh& me
     mesh.LoadVertexAttribute(0, 4, vertexAttribute0);
     mesh.LoadVertexAttribute(1, 4, vertexAttribute1);
     return true;
-}
-
-namespace Shiny
-{
-struct Vertex
-{
-    Float3 p;
-    Int_2_10_10_10 n;
-    unsigned short tx;
-    unsigned short ty;
-    bool operator<(const Vertex& rhs) const
-    {
-        return std::memcmp((void*)this, (void*)&rhs, sizeof(Vertex)) < 0;
-    };
-};
-struct SkinnedVertex
-{
-    Float3 p;
-    Int_2_10_10_10 n;
-    unsigned short tx;
-    unsigned short ty;
-    unsigned short bone[4];
-    unsigned short weight[4];
-    bool operator<(const SkinnedVertex& rhs) const
-    {
-        return std::memcmp((void*)this, (void*)&rhs, sizeof(SkinnedVertex)) < 0;
-    };
-};
 }
 
 void Shiny::ResourceManager::WriteObjToSPK(const std::string& objFileName, const std::string& spkFileName)

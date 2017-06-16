@@ -16,7 +16,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     meshes_[0]->LoadStandardPackage("prototype");
 
     meshes_.emplace_back(std::make_shared<Mesh>(1));
-    meshes_[1]->LoadStandardPackage("white");
+    meshes_[1]->LoadStandardPackage("arena");
 
     bronzeMetal_.reset(new Material("bronze_copper"));
     
@@ -25,7 +25,7 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     batchOfAnimatedEntity_.batch_[animation_].emplace_back();
     auto& e0 = batchOfAnimatedEntity_.batch_[animation_].back();
     e0.position_ = Float3(0, 0, 0);
-    e0.scale_ = Float3(0.1);
+    e0.scale_ = Float3(0.01);
     e0.models_[bronzeMetal_].emplace_back(meshes_[0]);
     e0.rotation_ = Float4(0,0,1,0);
 
@@ -54,7 +54,7 @@ void Shiny::Game::Update(float deltaTime, const Input* input)
     masterRenderer_.Update(deltaTime);
     Matrix4x4 view;
     Float3 position;
-    thirdPersonCamera_.GetPose(view, position, Float3(0,0,15));
+    thirdPersonCamera_.GetPose(view, position, Float3(0,0,1.5));
     masterRenderer_.SetCameraPose(view, position);
     Render();
 }

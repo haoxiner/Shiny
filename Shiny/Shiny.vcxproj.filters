@@ -28,6 +28,9 @@
     <Filter Include="RenderEngine">
       <UniqueIdentifier>{3d53f1a4-9bfb-46e7-985f-544fe97ff608}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderEngine\Terrain">
+      <UniqueIdentifier>{d88d6d2c-e71b-40c2-b0b8-c4fc54e24459}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MathUtil.h">
@@ -135,6 +138,21 @@
     <ClInclude Include="ThirdPersonCamera.h">
       <Filter>Game</Filter>
     </ClInclude>
+    <ClInclude Include="Heightmap.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain.h">
+      <Filter>GPUData</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>RenderEngine\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinnedVertex.h">
+      <Filter>RenderEngine\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="lodepng.h">
+      <Filter>Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -212,6 +230,12 @@
     <ClCompile Include="ThirdPersonCamera.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="Terrain.cpp">
+      <Filter>GPUData</Filter>
+    </ClCompile>
+    <ClCompile Include="lodepng.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\PBR.frag.glsl">
@@ -239,6 +263,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\Stationary.vert.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Terrain.vert.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

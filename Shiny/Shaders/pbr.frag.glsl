@@ -242,18 +242,18 @@ void main()
 	float metallic = 1.0;//texture(metallicMap, uv).r * material0.y;
 	vec3 baseColor = texture(baseColorMap, uv).rgb;
 
-	roughness = 0.5;
-	metallic = 1;
-	alphaG = roughness * roughness;
-	baseColor = vec3(1.0, 1.0, 1.0);
+	// roughness = 0.5;
+	// metallic = 1;
+	// alphaG = roughness * roughness;
+	// baseColor = vec3(1.0, 1.0, 1.0);
 
 	vec3 reflectance = vec3(0.5);
 	vec3 diffuseColor = baseColor * (1.0 - metallic);
 
 	vec3 f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + baseColor * metallic;
-	vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
+	const vec3 f90 = vec3(1.0);//vec3(Saturate(50.0 * dot(f0, vec3(0.33))));
 
-	float NdotV = abs(dot(N, V));
+	float NdotV = Saturate(dot(N, V));
 	vec3 specular = EvaluateIBLSpecular(N, V, NdotV, alphaG, roughness, f0, f90);
 	vec3 diffuse = diffuseColor * INV_PI * EvaluateIBLDiffuse(N, V, NdotV, alphaG);
 	fragColor.xyz += (diffuse + specular);
@@ -276,10 +276,11 @@ void main()
 	
 	// fragColor.xyz += vec3(10000, 10000, 10000) * (Fr + diffuseColor * Fd) / dot(pointLight, pointLight);
 //////////////////////////////////////////////////////////////////
-
+	
 	float exposure = 1;
 	fragColor *= exposure;
 	fragColor.xyz = TonemapUncharted2(fragColor.xyz);
-	fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
+	// fragColor.xyz = ApproximationLinearToSRGB(fragColor.xyz);
 	fragColor.w = 1.0;
+
 }

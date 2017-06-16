@@ -90,7 +90,9 @@ void MasterRenderer::RenderSky(SkyBox& skyBox)
 {
     skyBoxShader_.Use();
     glDepthFunc(GL_LEQUAL);
+    glEnable(GL_FRAMEBUFFER_SRGB);
     skyBox.Render();
+    glDisable(GL_FRAMEBUFFER_SRGB);
     glDepthFunc(GL_LESS);
 }
 void MasterRenderer::Update(float deltaTime)
@@ -98,7 +100,8 @@ void MasterRenderer::Update(float deltaTime)
     deltaTime_ = deltaTime;
 }
 void MasterRenderer::Render(BatchOfStationaryEntity& batch)
-{   
+{
+    glEnable(GL_FRAMEBUFFER_SRGB);
     stationaryEntityShader_.Use();
     PerObjectConstantBuffer perObjectBuffer;
     glBindTextureUnit(0, dfgTextureID_);
@@ -118,9 +121,12 @@ void MasterRenderer::Render(BatchOfStationaryEntity& batch)
             }
         }
     }
+    glDisable(GL_FRAMEBUFFER_SRGB);
 }
 void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
 {
+    glEnable(GL_FRAMEBUFFER_SRGB);
+
     static float animID = 0.0f;
     animID += deltaTime_ * 30;
 
@@ -148,6 +154,8 @@ void MasterRenderer::Render(BatchOfAnimatedEntity& batch)
             }
         }
     }
+    glDisable(GL_FRAMEBUFFER_SRGB);
+
 }
 void MasterRenderer::SetupConstantBuffers()
 {
@@ -163,7 +171,7 @@ void MasterRenderer::SetupConstantBuffers()
         0, 1, 0, 0,
         0, 0, 0, 1
     );
-    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 10.0f, 10000.0f);
+    staticConstantBuffer.viewToProjectionForYup = MakePerspectiveProjectionMatrix(45.0f, static_cast<float>(xResolution_) / yResolution_, 1.0f, 10000.0f);
     staticConstantBuffer.viewToProjectionForZup = staticConstantBuffer.viewToProjectionForYup/* * Rotate90degreeAboutXAxis*/;
     glNamedBufferStorage(constantBufferList_[STATIC_CONSTANT_BUFFER], sizeof(StaticConstantBuffer), &staticConstantBuffer, 0);
     glNamedBufferStorage(constantBufferList_[PER_FRAME_CONSTANT_BUFFER], sizeof(PerFrameConstantBuffer), nullptr, GL_MAP_WRITE_BIT);

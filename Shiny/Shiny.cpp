@@ -71,7 +71,7 @@ int main()
     //TestPreIntegrator();
     using namespace Shiny;
     //ResourceManager::WriteObjToSPK("../../Resources/Model/prototype.obj", "../../Resources/Model/prototype.bin");
-    //ResourceManager::WriteObjToScene("../../Resources/Scene/white.obj", "../../Resources/Scene/white.scene");
+    //ResourceManager::WriteObjToScene("../../Resources/Model/arena.obj", "../../Resources/Model/arena.bin");
     TestDisplay();
     return 0;
 }

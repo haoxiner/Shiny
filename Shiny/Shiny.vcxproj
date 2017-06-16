@@ -154,6 +154,10 @@
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Config.h" />
+    <ClInclude Include="lodepng.h" />
+    <ClInclude Include="SkinnedVertex.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Heightmap.h" />
     <ClInclude Include="Json.h" />
     <ClInclude Include="MasterRenderer.h" />
     <ClInclude Include="Material.h" />
@@ -173,6 +177,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="SkyBox.h" />
+    <ClInclude Include="Terrain.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="ThirdPersonCamera.h" />
     <ClInclude Include="TinyObjLoader.h" />
@@ -187,6 +192,7 @@
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Json.cpp" />
+    <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="MasterRenderer.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="PreComputation.cpp">
@@ -203,6 +209,7 @@
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="Shiny.cpp" />
     <ClCompile Include="SkyBox.cpp" />
+    <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="ThirdPersonCamera.cpp" />
     <ClCompile Include="TinyObjLoader.cpp" />
     <ClCompile Include="UniformBlock.cpp" />
@@ -219,6 +226,7 @@
     <None Include="Shaders\SkyBox.frag.glsl" />
     <None Include="Shaders\SkyBox.vert.glsl" />
     <None Include="Shaders\Stationary.vert.glsl" />
+    <None Include="Shaders\Terrain.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

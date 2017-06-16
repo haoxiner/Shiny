@@ -14,5 +14,7 @@ vec4 SampleCubemapForZup(samplerCube cubemap, vec3 direction)
 }
 void main()
 {
-	fragColor = pow(SampleCubemapForZup(envmap, cubemapDirection), vec4(1.0/2.2));
+	// fragColor = pow(SampleCubemapForZup(envmap, cubemapDirection), vec4(1.0/2.2));
+	fragColor = SampleCubemapForZup(envmap, cubemapDirection);
+	fragColor.w = 1.0;
 }

@@ -3,6 +3,32 @@
 const float Shiny::ThirdPersonCamera::DEFAULT_THETA = Shiny::DegreesToRadians(90.0f);
 const float Shiny::ThirdPersonCamera::DEFAULT_PHI = Shiny::DegreesToRadians(-90.0f);
 
+void Shiny::ThirdPersonCamera::Update(float deltaTime, const Input& input, float forwardRotation)
+{
+    float pitchChange = input.GetRightVerticalAxis() * 0.5f * PI * deltaTime;
+    //theta_ += pitchChange;
+    theta_ = Clamp(theta_ + pitchChange, 1e-3f, 3.14f);
+    //float hDis = distanceFromPlayer_ * std::cosf(pitch_);
+    //float vDis = -distanceFromPlayer_ * std::sinf(pitch_);
+
+    //    if (pitch_ > 0) {
+    //        constexpr float invHalfPi = 1.0f / (PI * 0.5);
+    //        distanceFromPlayer_ = (1.0f - pitch_ * invHalfPi) * MAX_DISTANCE_FROM_PLAYER;
+    //        hDis = distanceFromPlayer_ * std::cosf(pitch_);
+    //        vDis = -distanceFromPlayer_ * std::sinf(pitch_);
+    //    } else {
+    //        distanceFromPlayer_ = MAX_DISTANCE_FROM_PLAYER;
+    //    }
+    //float theta = glm::radians(-90.0f) - player->GetRotationToForword();
+    //float offsetX = hDis * std::cosf(theta);
+    //float offsetZ = hDis * std::sinf(theta);
+    //position_.x = player->position_.x - offsetX;
+    //position_.z = player->position_.z - offsetZ;
+    //position_.y = player->position_.y + vDis + 10;
+    //    yaw_ = glm::pi<float>() - (theta);
+    phi_ = forwardRotation + DEFAULT_PHI;
+}
+
 void Shiny::ThirdPersonCamera::GetPose(Matrix4x4& viewMatrix, Float3& cameraPosition, const Float3& focusPosition)
 {
     float sinTheta = std::sinf(theta_);
@@ -42,7 +68,6 @@ void Shiny::ThirdPersonCamera::GetPose(Matrix4x4& viewMatrix, Float3& cameraPosi
 
 void Shiny::ThirdPersonCamera::AddForce(float horizontal, float vertical)
 {
-    
     phi_ += DegreesToRadians(horizontal);
     theta_ = Clamp(theta_ + DegreesToRadians(vertical), 1e-3f, 3.14f);
 }

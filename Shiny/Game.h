@@ -8,6 +8,7 @@
 #include "MasterRenderer.h"
 #include "Cubemap.h"
 #include "Terrain.h"
+#include "Player.h"
 #include "Camera.h"
 #include "MathUtil.h"
 #include <vector>
@@ -17,7 +18,7 @@ class Game
 {
 public:
     bool Startup(int xResolution, int yResolution, const Input* input);
-    void Update(float deltaTime, const Input* input);
+    void Update(float deltaTime, const Input& input);
     void Render();
     void Shutdown();
 private:
@@ -30,7 +31,6 @@ private:
     BatchOfStationaryEntity batchOfStationaryEntity_;
     BatchOfAnimatingEntity batchOfAnimatingEntity_;
     std::shared_ptr<Animation> animation_;
-
-    std::shared_ptr<Entity> playerEntity_;
+    std::unique_ptr<Player> player_;
 };
 }

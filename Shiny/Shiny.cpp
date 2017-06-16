@@ -35,7 +35,7 @@ int TestDisplay()
     while (display.Running()) {
         performanceTimer.Tick();
         deltaTime = performanceTimer.GetDeltaTime();
-        game.Update(deltaTime, input);
+        game.Update(deltaTime, *input);
         display.Update();
         if (input->Quit()) {
             display.Shutdown();

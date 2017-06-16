@@ -155,6 +155,7 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="lodepng.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="SkinnedVertex.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Heightmap.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="MasterRenderer.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="PreComputation.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>

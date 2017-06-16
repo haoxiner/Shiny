@@ -22,13 +22,14 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     
     animation_.reset(new Animation("prototype"));
 
-    playerEntity_.reset(new Entity);
-    batchOfAnimatingEntity_.batch_[animation_].emplace_back(playerEntity_);
+    auto playerEntity = std::make_shared<Entity>();
+    batchOfAnimatingEntity_.batch_[animation_].emplace_back(playerEntity);
     //auto& e0 = batchOfAnimatingEntity_.batch_[animation_].back();
-    playerEntity_->position_ = Float3(63.5, 63.5, 0);
-    playerEntity_->scale_ = Float3(0.01);
-    playerEntity_->models_[bronzeMetal_].emplace_back(meshes_[0]);
-    playerEntity_->rotation_ = Float4(0,0,1,0);
+    playerEntity->position_ = Float3(63.5, 63.5, 0);
+    playerEntity->scale_ = Float3(0.01);
+    playerEntity->models_[bronzeMetal_].emplace_back(meshes_[0]);
+    playerEntity->rotation_ = Float4(0,0,1,0);
+    player_.reset(new Player(playerEntity));
 
     batchOfStationaryEntity_.entityList_.emplace_back(new Entity);
     auto& e1 = batchOfStationaryEntity_.entityList_.back();
@@ -48,20 +49,22 @@ bool Shiny::Game::Startup(int xResolution, int yResolution, const Input* input)
     return true;
 }
 
-void Shiny::Game::Update(float deltaTime, const Input* input)
+void Shiny::Game::Update(float deltaTime, const Input& input)
 {
-    thirdPersonCamera_.AddForce(-input->GetRightHorizontalAxis(), input->GetRightVerticalAxis());
+    player_->Update(deltaTime, input);
+    thirdPersonCamera_.Update(deltaTime, input, player_->GetRotationToForward());
+    //thirdPersonCamera_.AddForce(-input.GetRightHorizontalAxis(), input.GetRightVerticalAxis());
     masterRenderer_.Update(deltaTime);
     Matrix4x4 view;
     Float3 position;
-    thirdPersonCamera_.GetPose(view, position, playerEntity_->position_ + Float3(0,0,1.5));
+    thirdPersonCamera_.GetPose(view, position, player_->GetPosition() + Float3(0,0,1.5));
     masterRenderer_.SetCameraPose(view, position);
     Render();
 }
 
 void Shiny::Game::Render()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
     masterRenderer_.Render(batchOfAnimatingEntity_);
     //masterRenderer_.Render(batchOfStationaryEntity_);
     masterRenderer_.Render(*terrain_);

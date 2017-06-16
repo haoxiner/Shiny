@@ -153,6 +153,9 @@
     <ClInclude Include="Vertex.h">
       <Filter>GPUData</Filter>
     </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Shiny.cpp">
@@ -235,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="Terrain.cpp">
       <Filter>RenderEngine\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
